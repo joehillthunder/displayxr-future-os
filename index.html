@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Ten future OS layouts inspired by VR communities, developer forums and sci-fi, previewed on IT workstations, car dashboards and phones, with a builder for making your own.">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}.hq{font-size:13px;color:var(--mute);text-decoration:none;font-weight:500}.hq:hover{color:var(--accent)}</style>
+<title>Future OS Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;600&family=Fraunces:opsz,wght@9..144,300;9..144,500&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Unbounded:wght@400;600&display=swap">
+<style>
+/* Layout: three-pane lab. Layout list | live device stage | details and builder. Stage stays pinned while the builder scrolls. */
+:root{
+  --bg:#e6e8ec; --panel:#f6f7f9; --ink:#151922; --mute:#566072; --line:#cbd0d9;
+  --accent:#c24c14; --accent-ink:#ffffff; --stage:#d5d8df; --bezel:#1c1f26; --hover:#eceef2;
+  --f-display:'Unbounded','Arial Black',sans-serif;
+  --f-body:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d0f13; --panel:#15181e; --ink:#e5e7ec; --mute:#8d94a5; --line:#282d37;
+  --accent:#ff7a3d; --accent-ink:#1a0b03; --stage:#07080b; --bezel:#000000; --hover:#1c2028; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d0f13; --panel:#15181e; --ink:#e5e7ec; --mute:#8d94a5; --line:#282d37;
+  --accent:#ff7a3d; --accent-ink:#1a0b03; --stage:#07080b; --bezel:#000000; --hover:#1c2028; color-scheme:dark}
+
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
+*{box-sizing:border-box}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 32px;padding-block:20px 4px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1640px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{display:grid;grid-template-columns:repeat(3,6px);gap:3px;height:26px}
+.mark i{border-radius:2px;background:var(--ink)}
+.mark i:nth-child(1){height:60%;align-self:end}
+.mark i:nth-child(2){background:var(--accent)}
+.mark i:nth-child(3){height:80%;align-self:end}
+h1{font-family:var(--f-display);font-weight:600;font-size:22px;letter-spacing:-.01em;margin:0}
+.lede{margin:0;max-width:68ch;color:var(--mute);text-wrap:pretty}
+
+.app{display:grid;grid-template-columns:240px minmax(0,1fr) 350px;gap:16px;align-items:start;padding-block:16px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1640px;margin:0 auto}
+
+.eyebrow{font-family:var(--f-mono);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--mute);margin:0}
+.list{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;display:flex;flex-direction:column;gap:6px;padding-right:4px}
+.list .eyebrow{padding:10px 4px 4px}
+.list .eyebrow:first-child{padding-top:0}
+.li{display:grid;gap:4px;text-align:left;padding:10px 12px;border:1px solid transparent;border-radius:8px;background:transparent;cursor:pointer}
+.li:hover{background:var(--hover)}
+.li.on{background:var(--panel);border-color:var(--line)}
+.li .sw{display:flex;height:6px;border-radius:3px;overflow:hidden}
+.li .sw i{flex:1}
+.li-n{font-weight:600}
+.li-a{font-family:var(--f-mono);font-size:11px;color:var(--mute)}
+.empty{color:var(--mute);font-size:13px;padding:4px;margin:0}
+.fine{color:var(--mute);font-size:12px;padding:12px 4px 0;margin:0;border-top:1px solid var(--line)}
+
+.stage-wrap{position:sticky;top:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.stage-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.stage-meta{font-family:var(--f-mono);font-size:12px;color:var(--mute)}
+.seg{display:inline-flex;padding:3px;border-radius:9px;background:var(--panel);border:1px solid var(--line);gap:2px}
+.seg button{border:0;background:transparent;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:500;color:var(--mute)}
+.seg button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.stage{background:var(--stage);border-radius:14px;padding:clamp(12px,3vw,32px);display:grid;place-items:center;gap:20px;min-height:360px}
+.dev{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.dev figcaption{font-family:var(--f-mono);font-size:11px;color:var(--mute);letter-spacing:.06em;text-transform:uppercase}
+.v-it .dev-it{width:min(100%,900px)}
+.v-auto .dev-auto{width:100%}
+.v-mobile .dev-mobile{width:min(100%,290px)}
+.v-all{grid-template-columns:minmax(0,1fr) minmax(130px,23%);grid-template-areas:"it mo" "au mo"}
+.v-all .dev{width:100%}
+.v-all .dev-it{grid-area:it}.v-all .dev-auto{grid-area:au}.v-all .dev-mobile{grid-area:mo}
+.dev-it .screen{width:100%;aspect-ratio:16/10;border:clamp(4px,.8vw,10px) solid var(--bezel);border-radius:10px}
+.dev-auto .screen{width:100%;aspect-ratio:3/1;border:clamp(4px,.8vw,9px) solid var(--bezel);border-radius:16px 16px 36px 36px}
+.dev-mobile .screen{width:100%;aspect-ratio:9/19.5;border:clamp(5px,1vw,9px) solid var(--bezel);border-radius:clamp(18px,4vw,30px)}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel > .seg{align-self:flex-start}
+.d-head h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:4px 0 6px;text-wrap:balance}
+.d-tag{margin:0;color:var(--mute)}
+.panel section{display:grid;gap:8px;padding-top:12px;border-top:1px solid var(--line)}
+.panel h3{font-size:12px;font-weight:600;margin:0;text-transform:uppercase;letter-spacing:.08em;color:var(--mute)}
+.src,.rules{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.src li{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:baseline}
+.badge{font-family:var(--f-mono);font-size:10px;text-transform:uppercase;letter-spacing:.06em;padding:1px 6px;border-radius:4px;border:1px solid var(--line);color:var(--mute);white-space:nowrap}
+.rules li{padding-left:14px;position:relative}
+.rules li::before{content:"";position:absolute;left:0;top:.6em;width:6px;height:2px;background:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:3px 10px;border-radius:20px;background:var(--bg);border:1px solid var(--line)}
+.pal{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pal div{display:grid;gap:3px;font-family:var(--f-mono);font-size:10px;color:var(--mute)}
+.pal i{height:26px;border-radius:5px;border:1px solid var(--line)}
+.permods{display:grid;gap:6px;margin:0}
+.permods div{display:grid;grid-template-columns:56px 1fr;gap:8px}
+.permods dt{font-family:var(--f-mono);font-size:11px;color:var(--mute);padding-top:1px}
+.permods dd{margin:0;font-size:13px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;padding-top:12px;border-top:1px solid var(--line)}
+.confirm{display:grid;gap:8px;padding:10px;border:1px solid var(--accent);border-radius:8px}
+.confirm p{margin:0}
+.btn{border:1px solid var(--line);background:var(--bg);padding:7px 14px;border-radius:7px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--mute)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--accent)}
+
+.bf{display:flex;flex-direction:column;gap:14px}
+.f{display:grid;gap:6px;border:0;padding:0;margin:0;min-width:0}
+.f > label,.f legend{font-size:12px;font-weight:600;color:var(--mute);padding:0}
+.f input[type=text],.f select,.f textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--bg)}
+.f textarea{resize:vertical;font-family:var(--f-mono);font-size:12px}
+.hint{margin:0;font-size:12px;color:var(--mute)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.colors{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+.col{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer}
+.col input{width:34px;height:28px;padding:2px;border:1px solid var(--line);border-radius:6px;background:var(--bg);cursor:pointer;flex:none}
+.radios{display:flex;gap:4px;flex-wrap:wrap}
+.radios label{display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--line);border-radius:7px;cursor:pointer;font-size:13px}
+.radios label:has(input:checked){border-color:var(--accent);background:var(--bg)}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px}
+.checks label{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer}
+.modgrp{display:grid;gap:6px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.modgrp b{font-size:12px}
+.order{font-family:var(--f-mono);font-size:11px;color:var(--mute);margin:0}
+.tog{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer}
+.io summary{cursor:pointer;font-weight:600;font-size:13px}
+.io > div{margin-top:10px}
+.io .actions{border:0;padding-top:8px}
+.msg{margin:6px 0 0;font-size:12px;min-height:1em}
+.msg.err{color:var(--accent)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-weight:500;z-index:20;max-width:calc(100% - 32px)}
+
+@media (max-width:1240px){
+  .app{grid-template-columns:minmax(0,1fr) 340px}
+  .list{grid-column:1/-1;position:static;max-height:none;flex-direction:row;overflow-x:auto;padding-bottom:6px}
+  .list .eyebrow,.list .empty,.list .fine{display:none}
+  .li{flex:0 0 170px}
+}
+@media (max-width:900px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .stage-wrap{position:static}
+}
+@media (max-width:640px){
+  .v-all{grid-template-columns:minmax(0,1fr);grid-template-areas:"it" "au" "mo"}
+  .v-all .dev-mobile{width:min(100%,220px)}
+  .row2,.colors{grid-template-columns:1fr}
+}
+
+/* ---------- Device screens: every color comes from the layout's own palette ---------- */
+.screen{--u:1cqmin;position:relative;container-type:size;overflow:hidden;background:var(--bg);color:var(--fg);font-family:var(--font);line-height:1.2}
+.screen *{box-sizing:border-box}
+.dv-auto{--u:calc(1cqmin * 1.6)}
+.dv-mobile{--u:calc(1cqmin * 1.5)}
+.t{background:var(--sf);border-radius:var(--rad);padding:calc(1.8*var(--u));display:flex;flex-direction:column;gap:calc(.6*var(--u));min-width:0;min-height:0;overflow:hidden}
+.t-l{font-size:calc(2*var(--u));text-transform:uppercase;letter-spacing:.08em;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t-v{font-size:calc(5*var(--u));line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t-v.sm{font-size:calc(3*var(--u));line-height:1.15}
+.t-s{font-size:calc(2*var(--u));opacity:.72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t-bar{height:calc(.8*var(--u));min-height:2px;background:color-mix(in srgb,var(--fg) 15%,transparent);border-radius:9px;overflow:hidden;flex:none}
+.t-bar i{display:block;height:100%;background:var(--ac)}
+.t-sp{width:100%;height:calc(5*var(--u));flex:none}
+.sp-a{fill:color-mix(in srgb,var(--ac) 22%,transparent)}
+.sp-l{fill:none;stroke:var(--ac);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.t-term{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:calc(2.1*var(--u));line-height:1.4;color:var(--ac);white-space:pre;overflow:hidden}
+
+/* bands */
+.lc{position:absolute;inset:0;display:grid;grid-template-rows:auto 1fr auto;padding:2cqmin;gap:1.2cqmin}
+.lc-head,.lc-foot{display:flex;gap:1cqmin;height:5cqmin}
+.lc-cap{width:20cqmin;flex:none;background:var(--ac);border-radius:5cqmin 0 0 0}
+.lc-cap.b{border-radius:0 0 0 5cqmin;background:var(--ac2)}
+.lc-run{background:var(--ac)}
+.lc-name,.lc-stamp{font-size:4.4cqmin;line-height:5cqmin;color:var(--ac);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:50%}
+.lc-body{display:grid;grid-template-columns:20cqmin 1fr;gap:1.2cqmin;min-height:0}
+.lc-side{display:flex;flex-direction:column;gap:.8cqmin;min-height:0;overflow:hidden}
+.lc-pill{color:var(--bg);font-size:calc(2.2*var(--u));text-transform:uppercase;flex:none;height:calc(5*var(--u));padding:0 1.2cqmin .5cqmin;display:flex;align-items:flex-end;justify-content:flex-end;white-space:nowrap;overflow:hidden}
+.lc-fill{flex:1;background:var(--mu);min-height:2cqmin}
+.lc-main{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.4cqmin;align-content:start;min-height:0;overflow:hidden}
+.lc.tall .lc-main{grid-template-columns:minmax(0,1fr)}
+.lc .t{background:transparent;border-left:calc(.9*var(--u)) solid var(--ac);border-radius:0}
+.lc .t:nth-child(3n+2){border-color:var(--ac2)}
+.lc .t:nth-child(3n){border-color:var(--mu)}
+.lc .t-v{color:var(--fg)}
+
+/* arc */
+.arc{position:absolute;inset:0;perspective:140cqmin;background:radial-gradient(120% 80% at 50% 115%,color-mix(in srgb,var(--ac) 28%,var(--bg)),var(--bg) 62%)}
+.arc-hz{position:absolute;left:0;right:0;top:74%;height:1px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--ac) 70%,transparent),transparent)}
+.arc-c{position:absolute;width:22%;height:46%}
+.dv-auto .arc-c{width:16%;height:68%}
+.arc.tall .arc-c{width:80%;height:16%}
+.arc-c .t{height:100%;background:color-mix(in srgb,var(--sf) 85%,transparent);border:1px solid color-mix(in srgb,var(--fg) 14%,transparent)}
+.arc-c.on .t{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac),0 2cqmin 6cqmin color-mix(in srgb,var(--ac) 30%,transparent)}
+.arc-dock{position:absolute;left:50%;bottom:3.5%;transform:translateX(-50%);display:flex;gap:2.4cqmin;font-size:calc(1.9*var(--u));color:var(--mu);white-space:nowrap;padding:.8cqmin 2.4cqmin;border-radius:9cqmin;background:color-mix(in srgb,var(--sf) 75%,transparent)}
+
+/* radial */
+.rd{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"a w b" "h h h";align-items:center;gap:2cqmin;padding:3cqmin}
+.rd.tall{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"a b" "w w" "h h"}
+.rd-a{grid-area:a}.rd-b{grid-area:b}
+.rd-w{grid-area:w;height:100%;display:flex;align-items:center;justify-content:center;min-height:0}
+.rw{height:100%;width:auto;max-width:100%}
+.rd.tall .rd-w{height:auto}.rd.tall .rw{width:100%;height:auto}
+.rd-hint{grid-area:h;text-align:center;font-size:calc(1.9*var(--u));color:var(--mu)}
+.rd-ro .t{background:transparent;align-items:center;text-align:center}
+.rd-ro .t-v{font-size:calc(6*var(--u))}
+.rw path{fill:var(--sf);stroke:var(--bg);stroke-width:.6}
+.rw path.on{fill:var(--ac)}
+.rw text{font-family:var(--font);text-anchor:middle;dominant-baseline:middle;font-size:3.4px;fill:var(--fg)}
+.rw text.on{fill:var(--bg)}
+.rw .rc{fill:var(--bg);stroke:var(--ac2);stroke-width:.8}
+.rw .rv{font-size:5.6px}
+.rw .rl{font-size:2.6px;fill:var(--mu)}
+
+/* tiling */
+.tl{position:absolute;inset:0;display:grid;grid-template-rows:auto minmax(0,1fr);gap:.8cqmin;padding:.8cqmin}
+.tl-bar{display:flex;justify-content:space-between;align-items:center;gap:2cqmin;font-size:calc(2*var(--u));padding:0 1cqmin;height:calc(3.8*var(--u))}
+.tl-ws{display:flex;gap:.4cqmin}
+.tl-ws span{padding:0 1cqmin;color:var(--mu)}
+.tl-ws .on{background:var(--ac);color:var(--bg)}
+.tl-name{color:var(--ac2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-g{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:repeat(2,minmax(0,1fr));gap:.8cqmin;min-height:0}
+.tl-p:first-child{grid-row:span 2}
+.tl.tall .tl-g{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:2fr 1fr 1fr}
+.tl.tall .tl-p:first-child{grid-row:auto;grid-column:span 2}
+.tl-p{border:1px solid var(--mu);border-radius:var(--rad);display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden}
+.tl-p.on{border-color:var(--ac)}
+.tl-h{font-size:calc(1.9*var(--u));padding:.3cqmin 1.2cqmin;color:var(--bg);background:var(--mu);white-space:nowrap}
+.tl-p.on .tl-h{background:var(--ac)}
+.tl-p .t{background:transparent;flex:1;border-radius:0}
+
+/* holo */
+.ho{position:absolute;inset:0;perspective:120cqmin;background:radial-gradient(60% 60% at 50% 45%,color-mix(in srgb,var(--ac) 14%,var(--bg)),var(--bg))}
+.ho-grid{position:absolute;inset:0;background-image:linear-gradient(color-mix(in srgb,var(--ac) 12%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--ac) 12%,transparent) 1px,transparent 1px);background-size:6cqmin 6cqmin;-webkit-mask-image:radial-gradient(circle,#000 30%,transparent 75%);mask-image:radial-gradient(circle,#000 30%,transparent 75%)}
+.ho-c{position:absolute}
+.ho-c .t{height:100%;background:color-mix(in srgb,var(--ac) 9%,transparent);border:1px solid color-mix(in srgb,var(--ac) 55%,transparent);box-shadow:0 0 3cqmin color-mix(in srgb,var(--ac) 25%,transparent),inset 0 0 3cqmin color-mix(in srgb,var(--ac) 12%,transparent)}
+.ho-c .t-v{color:var(--ac)}
+.ho-c:nth-of-type(3) .t{border-color:color-mix(in srgb,var(--ac2) 70%,transparent)}
+.ho-hand{position:absolute;right:30%;bottom:16%;width:calc(6*var(--u));aspect-ratio:1}
+.ho.tall .ho-hand{right:18%;bottom:38%}
+.ho-hand i{position:absolute;inset:0;border:2px solid var(--ac2);border-radius:50%}
+.ho-hand i+i{inset:32%;background:var(--ac2);border:0}
+.ho-tag{position:absolute;left:3%;top:2%;font-size:calc(1.9*var(--u));color:var(--mu)}
+.anim .ho-c{animation:float 6s ease-in-out infinite}
+@keyframes float{50%{translate:0 -1.2cqmin}}
+
+/* ambient */
+.am{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3cqmin;padding:6cqmin;text-align:center}
+.dv-auto .am{flex-direction:row;text-align:left;gap:5cqmin}
+.am-top{position:absolute;top:3cqmin;left:0;right:0;text-align:center;font-size:calc(2*var(--u));color:var(--mu)}
+.am-orb{width:calc(9*var(--u));aspect-ratio:1;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 35%,var(--sf),var(--ac));box-shadow:0 0 6cqmin color-mix(in srgb,var(--ac) 45%,transparent)}
+.anim .am-orb{animation:breathe 4s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.12)}}
+.am-line{font-size:calc(5.2*var(--u));font-weight:300;line-height:1.15;max-width:20ch;margin:0;text-wrap:balance}
+.dv-auto .am-line{max-width:26ch}
+.am-chips{display:flex;gap:1.4cqmin;flex-wrap:wrap;justify-content:center}
+.dv-auto .am-chips{flex-direction:column;flex:none}
+.am-chip{background:var(--sf);border-radius:calc(var(--rad) + 2cqmin);padding:1cqmin 2.4cqmin;font-size:calc(2.1*var(--u));display:flex;gap:1.2cqmin;white-space:nowrap}
+.am-chip span{color:var(--mu)}
+
+/* cyber */
+.cy{position:absolute;inset:0;overflow:hidden;background:linear-gradient(var(--bg) 0 38%,color-mix(in srgb,var(--ac) 24%,var(--bg)) 52%,var(--bg) 52.2%)}
+.cy-sun{position:absolute;left:50%;top:52%;width:44cqmin;height:22cqmin;transform:translate(-50%,-100%);border-radius:44cqmin 44cqmin 0 0;background:linear-gradient(var(--ac2),var(--ac));opacity:.32}
+.cy-floor{position:absolute;left:-50%;width:200%;top:52%;height:100%;transform-origin:50% 0;transform:perspective(30cqmin) rotateX(55deg);background-image:linear-gradient(color-mix(in srgb,var(--ac) 55%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--ac2) 45%,transparent) 1px,transparent 1px);background-size:5cqmin 5cqmin}
+.anim .cy-floor{animation:fly 2.4s linear infinite}
+@keyframes fly{to{background-position:0 5cqmin}}
+.cy-n{position:absolute;width:3%;transform:translateX(-50%);background:linear-gradient(var(--ac2),color-mix(in srgb,var(--ac2) 8%,transparent));box-shadow:0 0 3cqmin color-mix(in srgb,var(--ac2) 50%,transparent)}
+.dv-mobile .cy-n{width:7%}
+.cy-n.on{background:linear-gradient(var(--ac),color-mix(in srgb,var(--ac) 8%,transparent));box-shadow:0 0 4cqmin var(--ac)}
+.cy-lab{position:absolute;bottom:calc(100% + 1cqmin);left:50%;transform:translateX(-50%);white-space:nowrap;text-align:center;font-size:calc(1.8*var(--u));display:flex;flex-direction:column;gap:.3cqmin;padding:.6cqmin 1.2cqmin;border:1px solid color-mix(in srgb,var(--ac2) 60%,transparent);background:color-mix(in srgb,var(--bg) 72%,transparent)}
+.cy-n.on .cy-lab{border-color:var(--ac)}
+.cy-lab span{color:var(--mu);text-transform:uppercase;letter-spacing:.08em}
+.cy-lab b{font-size:calc(2.8*var(--u));font-weight:600}
+.cy-hud{position:absolute;left:2cqmin;top:2cqmin;font-size:calc(1.9*var(--u));color:var(--ac2);letter-spacing:.1em;text-transform:uppercase}
+
+/* tactical */
+.tc{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;gap:1.4cqmin;padding:1.4cqmin}
+.tc.tall{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto minmax(0,1fr) auto}
+.tc.tall .tc-map{grid-column:1/-1;grid-row:1;aspect-ratio:1}
+.tc-col{display:flex;flex-direction:column;gap:1cqmin;min-height:0;overflow:hidden}
+.tc-col .t{flex:1;border:1px solid var(--mu);border-radius:var(--rad);background:color-mix(in srgb,var(--sf) 80%,transparent)}
+.tc-row{display:flex;justify-content:space-between;align-items:baseline;gap:1cqmin;border-bottom:1px solid var(--mu);padding:1cqmin 0;font-size:calc(2*var(--u))}
+.tc-row span{color:var(--mu);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+.tc-row b{font-size:calc(3.2*var(--u));font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tc-map{position:relative;display:flex;align-items:center;justify-content:center;min-height:0;border:1px solid var(--mu)}
+.rr{height:94%;width:auto;max-width:100%}
+.tc.tall .rr{width:92%;height:auto}
+.rr circle{fill:none;stroke:var(--mu);stroke-width:.4}
+.rr line{stroke:var(--mu);stroke-width:.3}
+.rr .sweep path{fill:color-mix(in srgb,var(--ac) 35%,transparent)}
+.rr .bl{fill:var(--ac);stroke:none}
+.rr .bl.hot{fill:var(--ac2)}
+.rr .self{fill:var(--fg);stroke:none}
+.rr text{font-size:3px;fill:var(--fg);font-family:var(--font)}
+.anim .sweep{animation:spin 5s linear infinite}
+@keyframes spin{to{transform:rotate(-360deg)}}
+.tc-cap{position:absolute;top:1cqmin;left:1.4cqmin;font-size:calc(1.8*var(--u));color:var(--ac);letter-spacing:.1em}
+.tc-alert{grid-column:1/-1;display:flex;gap:2cqmin;align-items:center;padding:1cqmin 1.6cqmin;background:color-mix(in srgb,var(--ac2) 18%,transparent);border-left:calc(.8*var(--u)) solid var(--ac2);font-size:calc(2.2*var(--u));white-space:nowrap;overflow:hidden}
+.tc-alert span{color:var(--ac2);font-weight:600;letter-spacing:.1em}
+
+/* stream */
+.st{position:absolute;inset:0;display:flex;flex-direction:column;gap:2cqmin;padding:3cqmin 4cqmin}
+.st-top{display:flex;justify-content:space-between;align-items:center;gap:2cqmin;font-size:calc(2.5*var(--u))}
+.st-top b{font-weight:600;white-space:nowrap}
+.st-q{color:var(--mu);border:1px solid color-mix(in srgb,var(--fg) 18%,transparent);border-radius:9cqmin;padding:.7cqmin 2.4cqmin;font-size:calc(2*var(--u));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-list{flex:1;min-height:0;display:flex;flex-direction:column;gap:1.3cqmin;overflow:hidden;width:min(100%,100cqmin);align-self:center}
+.st-i{display:grid;grid-template-columns:calc(6.5*var(--u)) calc(2*var(--u)) minmax(0,1fr);align-items:center;gap:1.4cqmin}
+.st-i time{font-size:calc(2*var(--u));color:var(--mu);font-variant-numeric:tabular-nums}
+.st-i i{width:calc(1.4*var(--u));aspect-ratio:1;border-radius:50%;background:var(--ac);justify-self:center}
+.st-i .t{border:1px solid color-mix(in srgb,var(--fg) 10%,transparent);padding:calc(1.2*var(--u)) calc(1.8*var(--u))}
+.st .t-v{font-size:calc(3.4*var(--u))}
+.st .t-sp,.st .t-bar{display:none}
+.st .t-term{max-height:1.4em}
+.st-i.fut{opacity:.55}
+.st-i.fut .t{background:transparent;border-style:dashed}
+.st-i.fut i{background:transparent;border:1px solid var(--mu)}
+.st-now{display:flex;align-items:center;gap:1.4cqmin;color:var(--ac2);font-size:calc(1.9*var(--u));text-transform:uppercase;letter-spacing:.1em;font-weight:600}
+.st-now::after{content:"";flex:1;height:2px;background:var(--ac2)}
+.st.h .st-list{flex-direction:row;width:100%}
+.st.h .st-i{grid-template-columns:none;grid-template-rows:auto auto minmax(0,1fr);flex:1;min-width:0;align-items:start}
+.st.h .st-i i{justify-self:start}
+.st.h .st-i .t{height:100%}
+.st.h .st-now{flex-direction:column}
+.st.h .st-now::after{width:2px;height:auto;flex:1}
+
+/* orbit */
+.ob{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--ac) 18%,var(--bg)),var(--bg) 62%)}
+.ob-e{position:absolute;inset:0;width:100%;height:100%}
+.ob-e ellipse{fill:none;stroke:color-mix(in srgb,var(--ac) 40%,transparent);stroke-width:1;vector-effect:non-scaling-stroke;stroke-dasharray:3 4}
+.ob-core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(36%,44cqmin);text-align:center;display:flex;flex-direction:column;align-items:center;gap:1cqmin}
+.ob-dot{width:calc(9*var(--u));aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 40% 35%,var(--fg),var(--ac) 45%,color-mix(in srgb,var(--ac) 20%,transparent) 72%);box-shadow:0 0 6cqmin var(--ac)}
+.anim .ob-dot{animation:breathe 3.5s ease-in-out infinite}
+.ob-core b{font-size:calc(3*var(--u));font-weight:600;line-height:1.15;text-wrap:balance}
+.ob-core span{font-size:calc(1.8*var(--u));color:var(--mu)}
+.ob-s{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:1.2cqmin;padding:1cqmin 1.6cqmin 1cqmin 1cqmin;background:var(--sf);border-radius:calc(var(--rad) + 1cqmin);border:1px solid color-mix(in srgb,var(--ac) 30%,transparent);max-width:30%}
+.dv-mobile .ob-s{max-width:42%}
+.ob-ring{width:calc(5.5*var(--u));aspect-ratio:1;border-radius:50%;background:conic-gradient(var(--ac2) calc(var(--p) * 1%),color-mix(in srgb,var(--fg) 12%,transparent) 0);display:grid;place-items:center;flex:none}
+.ob-ring span{width:72%;aspect-ratio:1;border-radius:50%;background:var(--sf);display:grid;place-items:center;font-size:calc(1.7*var(--u))}
+.ob-tx{display:flex;flex-direction:column;min-width:0;gap:.3cqmin}
+.ob-tx b{font-size:calc(2.1*var(--u));font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ob-tx span{font-size:calc(1.7*var(--u));color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ob-ask{position:absolute;bottom:2.5%;left:50%;transform:translateX(-50%);font-size:calc(1.9*var(--u));color:var(--mu);white-space:nowrap}
+
+@media (prefers-reduced-motion: reduce){.screen *{animation:none!important}}
+</style>
+
+</head>
+<body>
+<header class="top">
+  <a class="hq" href="https://joehillthunder.github.io/">← DisplayXR HQ</a>
+  <div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span><h1>Future OS Lab</h1></div>
+  <p class="lede">Ten interface concepts drawn from VR subreddits, developer forums and science fiction, each previewed on an IT workstation, a car dashboard and a phone. Remix any of them, or build your own in the Build tab.</p>
+</header>
+
+<main class="app">
+  <aside class="list" id="list" aria-label="Layouts"></aside>
+
+  <section class="stage-wrap" aria-label="Preview">
+    <div class="stage-bar">
+      <div class="seg" role="tablist" id="devs" aria-label="Device"></div>
+      <div class="stage-meta" id="stageMeta"></div>
+    </div>
+    <div class="stage" id="stage"></div>
+  </section>
+
+  <aside class="panel">
+    <div class="seg" role="tablist" id="tabs" aria-label="Panel">
+      <button type="button" role="tab" data-tab="details" id="tab-details">Details</button>
+      <button type="button" role="tab" data-tab="build" id="tab-build">Build</button>
+    </div>
+    <div id="details"></div>
+
+    <form id="build" class="bf" hidden autocomplete="off">
+      <div class="f"><label for="f-base">Start from</label><select id="f-base"></select></div>
+      <div class="f"><label for="f-name">Name</label><input type="text" id="f-name" maxlength="40"></div>
+      <div class="f"><label for="f-tag">Tagline</label><input type="text" id="f-tag" maxlength="120"></div>
+      <div class="f"><label for="f-arch">Layout engine</label><select id="f-arch"></select><p class="hint" id="f-arch-hint"></p></div>
+      <fieldset class="f"><legend>Palette</legend><div class="colors" id="f-colors"></div></fieldset>
+      <div class="row2">
+        <div class="f"><label for="f-font">Typeface</label><select id="f-font"></select></div>
+        <div class="f"><label for="f-rad">Corner radius: <output id="o-rad">0</output></label><input type="range" id="f-rad" min="0" max="6" step="1"></div>
+      </div>
+      <fieldset class="f"><legend>Density</legend><div class="radios" id="f-density"></div></fieldset>
+      <label class="tog"><input type="checkbox" id="f-motion"> Ambient motion (radar sweeps, breathing orbs, drifting cards)</label>
+      <fieldset class="f"><legend>Input methods</legend><div class="checks" id="f-inputs"></div></fieldset>
+      <fieldset class="f"><legend>Modules per device</legend>
+        <p class="hint">The first module you check gets the spotlight. Density caps how many show: calm 4, balanced 6, dense 8. Each device needs at least 3.</p>
+        <div id="f-mods" class="f"></div>
+      </fieldset>
+      <div class="f"><label for="f-rules">Design rules (one per line)</label><textarea id="f-rules" rows="3"></textarea></div>
+      <div class="actions">
+        <button type="submit" class="btn pri">Save layout</button>
+        <button type="button" class="btn" data-act="random">Randomize</button>
+      </div>
+      <details class="io">
+        <summary>Share as JSON</summary>
+        <div class="f"><label for="f-json">Layout JSON</label><textarea id="f-json" rows="7" spellcheck="false" placeholder="Paste a layout here, or copy the current draft out."></textarea></div>
+        <div class="actions">
+          <button type="button" class="btn" data-act="export">Copy draft JSON</button>
+          <button type="button" class="btn" data-act="import">Import JSON</button>
+        </div>
+        <p class="msg" id="io-msg" role="status"></p>
+      </details>
+    </form>
+  </aside>
+</main>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = v => String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+
+const DEVICES = {it:'IT workstation', auto:'Car dashboard', mobile:'Phone'};
+const PAL_KEYS = [['bg','Background'],['surface','Surface'],['fg','Text'],['accent','Accent'],['accent2','Accent 2'],['muted','Muted']];
+const FONTS = {
+  condensed:["Condensed (Antonio)","'Antonio','Arial Narrow',sans-serif"],
+  mono:["Mono (Plex Mono)","'IBM Plex Mono',ui-monospace,monospace"],
+  sans:["Sans (Plex Sans)","'IBM Plex Sans',system-ui,sans-serif"],
+  serif:["Serif (Fraunces)","'Fraunces',Georgia,serif"],
+  wide:["Wide (Unbounded)","'Unbounded','Arial Black',sans-serif"]
+};
+const INPUTS = {touch:'Touch', gesture:'Hand gesture', voice:'Voice', gaze:'Eye gaze', keyboard:'Keyboard', wheel:'Rotary knob'};
+const ARCH = {
+  bands:{label:'Bands', hint:'Color-coded slabs frame an open content area, like a starship console.'},
+  arc:{label:'Spatial arc', hint:'Windows sit on a curve around you. The center one is in focus.'},
+  radial:{label:'Radial wheel', hint:'Up to 8 slices around a center readout. Works with flicks or a rotary knob.'},
+  tiling:{label:'Tiling grid', hint:'Panes never overlap. One status bar is the only chrome.'},
+  holo:{label:'Floating glass', hint:'Translucent cards hang at different depths.'},
+  ambient:{label:'Ambient voice', hint:'One spoken sentence and three quiet chips.'},
+  cyber:{label:'Data city', hint:'Modules become glowing towers. Height shows load.'},
+  tactical:{label:'Tactical display', hint:'A central situation map, fixed readouts and an alert strip.'},
+  stream:{label:'Lifestream', hint:'Everything on one timeline, split at now.'},
+  orbit:{label:'Agent orbit', hint:'Tasks circle an agent core and show live progress.'}
+};
+
+const LIB = {
+  it:{
+    terminal:{l:'Terminal',k:'term',v:'$ kubectl get pods\n api-7f9   Running\n web-2c1   Running\n jobs-9a   Pending',s:'cluster prod-east',p:.62},
+    tickets:{l:'Tickets',k:'num',v:'14',s:'3 P1 · 11 queued',p:.35},
+    network:{l:'Network',k:'spark',v:'2.4 Gb/s',s:'core-sw-01',p:.71,sp:[3,5,4,6,8,7,9,6,7,10,8,9]},
+    deploys:{l:'Deploys',k:'bar',v:'v4.12',s:'rolling · 3 of 5 nodes',p:.6},
+    alerts:{l:'Alerts',k:'num',v:'2',s:'disk space · cert expiry',p:.2},
+    mail:{l:'Mail',k:'num',v:'23',s:'unread · 4 flagged',p:.4},
+    calendar:{l:'Calendar',k:'text',v:'14:00 Standup',s:'change review 15:30',p:.5},
+    docs:{l:'Docs',k:'text',v:'Runbook: failover',s:'edited 12 min ago',p:.3},
+    vpn:{l:'VPN',k:'text',v:'Connected',s:'wg0 · 18 ms',p:.9},
+    logs:{l:'Logs',k:'spark',v:'1.2k/min',s:'4 errors this hour',p:.55,sp:[6,6,7,5,9,12,8,7,6,7,6,5]}
+  },
+  auto:{
+    speed:{l:'Speed',k:'num',v:'64',s:'mph · limit 65',p:.64},
+    nav:{l:'Navigation',k:'text',v:'Left in 0.4 mi',s:'Harbor Ave · ETA 6:10',p:.8},
+    media:{l:'Media',k:'bar',v:'Night Drive',s:'2:14 / 4:02',p:.55},
+    climate:{l:'Climate',k:'num',v:'70°',s:'auto · fan 2',p:.5},
+    battery:{l:'Battery',k:'bar',v:'78%',s:'212 mi range',p:.78},
+    adas:{l:'Driver assist',k:'text',v:'Lane keep on',s:'follow distance 3',p:.9},
+    phone:{l:'Phone',k:'text',v:'2 missed',s:'press wheel to call back',p:.3},
+    cameras:{l:'Cameras',k:'text',v:'All clear',s:'360° view ready',p:1},
+    seats:{l:'Seats',k:'text',v:'Heat 2',s:'driver profile A',p:.4},
+    trip:{l:'Trip',k:'spark',v:'3.8 mi/kWh',s:'last 40 mi',p:.66,sp:[4,5,5,6,4,5,7,6,6,7,8,7]}
+  },
+  mobile:{
+    messages:{l:'Messages',k:'num',v:'3',s:'new from 2 people',p:.3},
+    camera:{l:'Camera',k:'text',v:'Ready',s:'last shot 2 h ago',p:.5},
+    wallet:{l:'Wallet',k:'num',v:'$1,284',s:'card ending 4417',p:.6},
+    health:{l:'Health',k:'bar',v:'7,420',s:'steps · goal 10k',p:.74},
+    maps:{l:'Maps',k:'text',v:'12 min home',s:'light traffic',p:.7},
+    music:{l:'Music',k:'bar',v:'Lo-fi mix',s:'1:02 / 3:30',p:.3},
+    photos:{l:'Photos',k:'num',v:'128',s:'new memories',p:.45},
+    weather:{l:'Weather',k:'spark',v:'61°',s:'clouds, rain at 6',p:.6,sp:[61,62,63,63,62,60,58,57,57,56,55,55]},
+    calls:{l:'Calls',k:'num',v:'1',s:'missed · voicemail',p:.1},
+    home:{l:'Home',k:'bar',v:'Lights 40%',s:'front door locked',p:.4}
+  }
+};
+const STAMP = {it:'09:41 · ops-ws-07', auto:'D · 64 mph', mobile:'9:41'};
+const LINES = {it:'Two alerts overnight, both resolved. Standup is at two.', auto:'Traffic is light. You will be home by 6:10.', mobile:'Three new messages. Rain starts around six.'};
+const ORBIT = {it:'Patching three servers', auto:'Routing around a closure', mobile:'Booking dinner for eight'};
+const ALERT = {it:'Disk 92% on db-03', auto:'Cyclist approaching on the right', mobile:'Battery 12% · low power on'};
+
+const PRESETS = [
+  {id:'bridge', name:'Bridge Panel', tagline:'A color-banded starship console where every function is a labeled slab.', archetype:'bands', font:'condensed', radius:1, density:'dense', motion:false,
+   palette:{bg:'#000000',surface:'#14101c',fg:'#ffd6ad',accent:'#ff9c3a',accent2:'#cc99cc',muted:'#8f93ff'}, inputs:['touch','voice'],
+   sources:[{t:'TV',n:'Star Trek: The Next Generation, LCARS interface by Michael Okuda'},{t:'Reddit',n:'r/unixporn and r/startrek LCARS desktop themes'}],
+   principles:['Color bands group functions; there is no window chrome','Every control is a big labeled target you can hit at a glance','Status lives in the frame and content sits in the open space'],
+   modules:{it:['alerts','network','tickets','deploys','logs','vpn'],auto:['speed','battery','nav','climate','adas','media'],mobile:['messages','health','weather','maps','wallet','music']}},
+  {id:'horizon', name:'Horizon Arc', tagline:'Windows on a curved shelf around you, the way headset users arrange virtual monitors.', archetype:'arc', font:'sans', radius:4, density:'calm', motion:true,
+   palette:{bg:'#0e1a22',surface:'#1d3341',fg:'#e8f5ff',accent:'#7fd4ff',accent2:'#ffd18a',muted:'#86a0b1'}, inputs:['gaze','gesture','keyboard'],
+   sources:[{t:'Reddit',n:'r/VisionPro and r/virtualreality threads on curved multi-window workspaces'},{t:'Reddit',n:'r/OculusQuest posts from Immersed and Virtual Desktop users'},{t:'Novel',n:'Snow Crash (Neal Stephenson), the Street as a shared spatial plane'}],
+   principles:['Windows sit on a curve at equal distance from your eyes','Look at a window to focus it; its neighbors dim and recede','A fixed horizon line keeps long sessions comfortable'],
+   modules:{it:['terminal','docs','mail','calendar','logs'],auto:['media','nav','speed','battery','climate'],mobile:['messages','maps','music','photos','weather']}},
+  {id:'pie', name:'Pie Wheel', tagline:'A radial menu you flick instead of aim. The same wheel works on a wrist, a thumb ring or a car knob.', archetype:'radial', font:'wide', radius:2, density:'dense', motion:false,
+   palette:{bg:'#15110d',surface:'#2c241b',fg:'#f6ecdf',accent:'#ffb000',accent2:'#ff5f3a',muted:'#a39280'}, inputs:['gesture','wheel','touch'],
+   sources:[{t:'Reddit',n:'r/OculusQuest discussion of hand-tracking menus and wrist pop-ups'},{t:'Forum',n:'Blender and game-dev forums on pie menus and Fitts’s law'},{t:'Game',n:'Mass Effect dialogue wheel'}],
+   principles:['Eight directions at most, so the menu runs on muscle memory','Flick toward a slice and let go; no precise aiming','One wheel for knob, thumb ring and wrist'],
+   modules:{it:['tickets','terminal','mail','calendar','docs','vpn','alerts','logs'],auto:['speed','media','nav','climate','phone','seats','cameras','battery'],mobile:['messages','camera','music','maps','calls','wallet','home','photos']}},
+  {id:'tiler', name:'Tiler', tagline:'Keyboard-first tiling where windows never overlap and nothing hides.', archetype:'tiling', font:'mono', radius:0, density:'dense', motion:false,
+   palette:{bg:'#0f1218',surface:'#161b24',fg:'#cdd6f4',accent:'#a6e3a1',accent2:'#89b4fa',muted:'#6c7489'}, inputs:['keyboard'],
+   sources:[{t:'Reddit',n:'r/unixporn setups built on i3, sway and Hyprland'},{t:'Forum',n:'Hacker News threads on keyboard-first workflows'},{t:'Reddit',n:'r/sysadmin wish lists for ops consoles'}],
+   principles:['Windows never overlap; the whole screen is always in use','Every pane is one keystroke away','The status bar is the only chrome'],
+   modules:{it:['terminal','logs','tickets','network','deploys'],auto:['nav','speed','battery','media','trip'],mobile:['messages','maps','weather','music','health']}},
+  {id:'precog', name:'Precog Glass', tagline:'Floating holographic cards you grab, fling and call by name.', archetype:'holo', font:'sans', radius:1, density:'balanced', motion:true,
+   palette:{bg:'#03111a',surface:'#0a2230',fg:'#d9fbff',accent:'#3cf4ff',accent2:'#ff7ad9',muted:'#6aa4b2'}, inputs:['gesture','voice','gaze'],
+   sources:[{t:'Film',n:'Minority Report, gesture UI developed with John Underkoffler'},{t:'Film',n:'Iron Man, the JARVIS workshop holograms'},{t:'Reddit',n:'r/virtualreality debates about gorilla-arm fatigue'}],
+   principles:['Content floats in depth layers you grab and fling','Voice names things; hands move them','Built for short bursts, so arms rest between gestures'],
+   modules:{it:['network','deploys','tickets','logs','alerts','docs'],auto:['nav','cameras','speed','adas','battery'],mobile:['maps','photos','messages','health','weather']}},
+  {id:'samantha', name:'Samantha', tagline:'A voice-first OS with almost no screen. It speaks one sentence and waits.', archetype:'ambient', font:'serif', radius:6, density:'calm', motion:true,
+   palette:{bg:'#f4d6c6',surface:'#efc2ab',fg:'#3a1a14',accent:'#d2452b',accent2:'#8a2a1c',muted:'#94523f'}, inputs:['voice'],
+   sources:[{t:'Film',n:'Her (2013), a conversational OS with a minimal screen'},{t:'Forum',n:'Calm Technology principles (Amber Case) on UX forums'},{t:'Reddit',n:'r/productivity threads on notification fatigue'}],
+   principles:['One sentence at a time','Voice leads and the screen confirms','Interrupt for people, never for apps'],
+   modules:{it:['calendar','alerts','mail'],auto:['nav','media','phone'],mobile:['messages','weather','calls']}},
+  {id:'sprawl', name:'Sprawl', tagline:'Cyberspace as a lit city. Systems are towers and load is height.', archetype:'cyber', font:'wide', radius:0, density:'balanced', motion:true,
+   palette:{bg:'#06020f',surface:'#160a2a',fg:'#efe6ff',accent:'#ff2bd6',accent2:'#2bf0ff',muted:'#9a84c8'}, inputs:['gaze','gesture'],
+   sources:[{t:'Novel',n:'Neuromancer (William Gibson), cyberspace as a glowing grid'},{t:'Novel',n:'Snow Crash (Neal Stephenson), the Metaverse'},{t:'Reddit',n:'r/cyberpunk and r/VRchat world builders'}],
+   principles:['Data is geography: the tallest towers carry the most load','You move by flying toward things, not by opening menus','Glow means live; dark means idle'],
+   modules:{it:['network','logs','deploys','tickets','alerts','vpn'],auto:['nav','battery','trip','speed','cameras'],mobile:['maps','wallet','health','photos','messages']}},
+  {id:'rocinante', name:'Rocinante', tagline:'A ship console with one situation display and readouts that never move.', archetype:'tactical', font:'mono', radius:0, density:'dense', motion:true,
+   palette:{bg:'#091017',surface:'#0f1c26',fg:'#d4ebf5',accent:'#5ad1ff',accent2:'#ff6b5a',muted:'#56717f'}, inputs:['touch','keyboard'],
+   sources:[{t:'Novel',n:'The Expanse (James S. A. Corey), ship consoles and hand terminals'},{t:'Reddit',n:'r/TheExpanse UI breakdowns'},{t:'Reddit',n:'r/flightsim threads on glass-cockpit displays'}],
+   principles:['One central situation display; everything else is peripheral','Readouts never move, so the eye learns where to look','Alerts escalate by color and position, never by popup'],
+   modules:{it:['alerts','network','vpn','tickets','deploys','logs'],auto:['speed','battery','adas','cameras','nav','climate'],mobile:['health','maps','weather','messages','calls','wallet']}},
+  {id:'chronicle', name:'Chronicle', tagline:'No files or apps, just one timeline of everything, split at now.', archetype:'stream', font:'sans', radius:3, density:'balanced', motion:false,
+   palette:{bg:'#eef1f5',surface:'#ffffff',fg:'#141a26',accent:'#2f5bea',accent2:'#d9552a',muted:'#6e7889'}, inputs:['touch','voice','keyboard'],
+   sources:[{t:'Research',n:'Lifestreams (Eric Freeman and David Gelernter, Yale, 1990s)'},{t:'Reddit',n:'r/PKMS and r/ObsidianMD posts on daily-note capture'},{t:'Forum',n:'Hacker News threads arguing that files and folders should go'}],
+   principles:['No files or folders, only a timeline','The past is searchable and the future is scheduled','Now is a line you can always scroll back to'],
+   modules:{it:['mail','deploys','tickets','docs','calendar','alerts'],auto:['phone','media','nav','trip','battery'],mobile:['messages','photos','calls','wallet','maps','weather']}},
+  {id:'mind', name:'Culture Mind', tagline:'You state an intent; agents orbit it and report back for approval.', archetype:'orbit', font:'wide', radius:5, density:'balanced', motion:true,
+   palette:{bg:'#0b0b15',surface:'#181830',fg:'#ecebff',accent:'#b69cff',accent2:'#6ef0b0',muted:'#8986b5'}, inputs:['voice','touch','gaze'],
+   sources:[{t:'Novel',n:'The Culture novels (Iain M. Banks), ship Minds that act on your behalf'},{t:'Reddit',n:'r/LocalLLaMA and r/AI_Agents threads on agent dashboards'},{t:'Forum',n:'Developer forums on human-in-the-loop approvals'}],
+   principles:['You state intent; agents do the steps','Each satellite is a task with live progress','Approve or redirect instead of operating'],
+   modules:{it:['deploys','tickets','mail','docs','logs','alerts'],auto:['nav','battery','climate','media','phone'],mobile:['wallet','messages','maps','home','music','calls']}}
+];
+
+/* ---------- screen rendering ---------- */
+function spark(a){
+  const mn=Math.min(...a), mx=Math.max(...a);
+  const pts=a.map((y,i)=>`${(i/(a.length-1)*100).toFixed(1)},${(28-(y-mn)/(mx-mn||1)*24).toFixed(1)}`).join(' ');
+  return `<svg class="t-sp" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><polygon class="sp-a" points="0,30 ${pts} 100,30"/><polyline class="sp-l" points="${pts}"/></svg>`;
+}
+function tile(m){
+  const v = m.k==='term' ? `<div class="t-term">${esc(m.v)}</div>` : `<div class="t-v ${m.k==='text'?'sm':''}">${esc(m.v)}</div>`;
+  const extra = m.k==='bar' ? `<div class="t-bar"><i style="width:${Math.round(m.p*100)}%"></i></div>` : m.k==='spark' ? spark(m.sp) : '';
+  return `<div class="t"><div class="t-l">${esc(m.l)}</div>${v}${extra}<div class="t-s">${esc(m.s)}</div></div>`;
+}
+const short = m => m.k==='term' ? 'live' : m.v;
+
+const R = {};
+R.bands = (s,d,mods,o) => {
+  const cols=['var(--ac)','var(--ac2)','var(--mu)'];
+  const pills=mods.map((m,i)=>`<div class="lc-pill" style="background:${cols[i%3]}">${esc(m.l)}</div>`).join('');
+  return `<div class="lc ${o.tall?'tall':''}">
+    <div class="lc-head"><div class="lc-cap"></div><div class="lc-run" style="flex:4"></div><div class="lc-name">${esc(s.name)}</div><div class="lc-run" style="flex:1;background:var(--ac2)"></div></div>
+    <div class="lc-body"><div class="lc-side">${pills}<div class="lc-fill"></div></div><div class="lc-main">${mods.slice(0,o.tall?4:6).map(tile).join('')}</div></div>
+    <div class="lc-foot"><div class="lc-cap b"></div><div class="lc-run" style="flex:2;background:var(--mu)"></div><div class="lc-run" style="flex:5"></div><div class="lc-stamp">${esc(o.stamp)}</div></div>
+  </div>`;
+};
+R.arc = (s,d,mods,o) => {
+  const ms=mods.slice(0,5), n=ms.length, mid=(n-1)/2, on=Math.round(mid);
+  const cards=ms.map((m,i)=>{
+    const t=n>1?(i-mid)/mid:0, a=Math.abs(t);
+    const tr=o.tall
+      ? `left:50%;top:${(46+t*32).toFixed(1)}%;transform:translate(-50%,-50%) rotateX(${(-t*28).toFixed(1)}deg) scale(${(1-a*.12).toFixed(2)})`
+      : `left:${(50+t*37).toFixed(1)}%;top:46%;transform:translate(-50%,-50%) rotateY(${(-t*34).toFixed(1)}deg) scale(${(1-a*.14).toFixed(2)})`;
+    return `<div class="arc-c ${i===on?'on':''}" style="${tr};z-index:${10-Math.round(a*5)};opacity:${(1-a*.35).toFixed(2)}">${tile(m)}</div>`;
+  }).join('');
+  return `<div class="arc ${o.tall?'tall':''}"><div class="arc-hz"></div>${cards}<div class="arc-dock"><span>Look to focus</span><span>Pinch to open</span><span>${esc(o.stamp)}</span></div></div>`;
+};
+R.radial = (s,d,mods,o) => {
+  const ms=mods.slice(0,8), n=ms.length, step=2*Math.PI/n, off=-Math.PI/2-step/2;
+  const P=(r,a)=>`${(50+r*Math.cos(a)).toFixed(2)} ${(50+r*Math.sin(a)).toFixed(2)}`;
+  let w='', l='';
+  ms.forEach((m,i)=>{
+    const a0=off+i*step+.025, a1=off+(i+1)*step-.025, lg=(a1-a0)>Math.PI?1:0, am=(a0+a1)/2;
+    w+=`<path class="${i===0?'on':''}" d="M${P(47,a0)} A47 47 0 ${lg} 1 ${P(47,a1)} L${P(21,a1)} A21 21 0 ${lg} 0 ${P(21,a0)}Z"/>`;
+    l+=`<text class="${i===0?'on':''}" x="${(50+34*Math.cos(am)).toFixed(2)}" y="${(50+34*Math.sin(am)).toFixed(2)}">${esc(m.l.slice(0,10))}</text>`;
+  });
+  const c=ms[0];
+  const wheel=`<svg class="rw" viewBox="0 0 100 100" aria-hidden="true">${w}${l}<circle class="rc" cx="50" cy="50" r="18"/><text class="rv" x="50" y="48.5">${esc(String(short(c)).slice(0,8))}</text><text class="rl" x="50" y="56.5">${esc(c.l)}</text></svg>`;
+  const ro=(m,cls)=>`<div class="rd-ro ${cls}">${m?tile(m):''}</div>`;
+  return `<div class="rd ${o.tall?'tall':''}">${ro(ms[1],'rd-a')}<div class="rd-w">${wheel}</div>${ro(ms[2],'rd-b')}<div class="rd-hint">Flick toward a slice, release to open · ${esc(o.stamp)}</div></div>`;
+};
+R.tiling = (s,d,mods,o) => {
+  const ms=mods.slice(0,5);
+  const ws=[1,2,3,4,5].map(i=>`<span class="${i===1?'on':''}">${i}</span>`).join('');
+  return `<div class="tl ${o.tall?'tall':''}"><div class="tl-bar"><div class="tl-ws">${ws}</div><div class="tl-name">${esc(s.name.toLowerCase())}</div><div>${esc(o.stamp)}</div></div>
+    <div class="tl-g">${ms.map((m,i)=>`<div class="tl-p ${i===0?'on':''}"><div class="tl-h">[${i+1}] ${esc(m.l.toLowerCase())}</div>${tile(m)}</div>`).join('')}</div></div>`;
+};
+const HW=[[6,10,30,36,-8],[40,6,24,30,4],[70,14,24,32,10],[10,56,26,32,6],[42,48,26,38,-4],[74,58,20,30,-10]];
+const HT=[[6,8,86,16,0],[14,27,72,14,8],[4,44,62,14,-8],[34,61,60,14,8],[8,79,84,14,0]];
+R.holo = (s,d,mods,o) => {
+  const pos=o.tall?HT:HW, ms=mods.slice(0,pos.length);
+  return `<div class="ho ${o.tall?'tall':''}"><div class="ho-grid"></div>${ms.map((m,i)=>{const [x,y,w,h,r]=pos[i];
+    return `<div class="ho-c" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%;transform:rotateY(${r}deg);animation-delay:${-i*1.3}s">${tile(m)}</div>`;}).join('')}
+    <div class="ho-hand" aria-hidden="true"><i></i><i></i></div><div class="ho-tag">${esc(o.stamp)} · say a name, grab to move</div></div>`;
+};
+R.ambient = (s,d,mods,o) => `<div class="am"><div class="am-top">${esc(o.stamp)}</div><div class="am-orb"></div><p class="am-line">${esc(LINES[d])}</p>
+  <div class="am-chips">${mods.slice(0,3).map(m=>`<div class="am-chip"><span>${esc(m.l)}</span><b>${esc(short(m))}</b></div>`).join('')}</div></div>`;
+const CW=[[16,66,22],[32,58,32],[50,62,40],[67,56,28],[84,68,18],[42,80,14]];
+const CT=[[24,54,20],[72,50,24],[46,68,14],[80,76,10],[20,84,8]];
+R.cyber = (s,d,mods,o) => {
+  const pos=o.tall?CT:CW, ms=mods.slice(0,pos.length), hot=ms.length>2?2:0;
+  return `<div class="cy"><div class="cy-sun"></div><div class="cy-floor"></div>${ms.map((m,i)=>{const [x,y,h]=pos[i], hh=h*(.5+m.p*.5);
+    return `<div class="cy-n ${i===hot?'on':''}" style="left:${x}%;top:${(y-hh).toFixed(1)}%;height:${hh.toFixed(1)}%"><div class="cy-lab"><span>${esc(m.l)}</span><b>${esc(short(m))}</b></div></div>`;}).join('')}
+    <div class="cy-hud">${esc(o.stamp)} · ${esc(s.name)}</div></div>`;
+};
+R.tactical = (s,d,mods,o) => {
+  const L=mods.slice(0,o.tall?2:3), Rt=mods.slice(o.tall?2:3,6);
+  const blips=[[12,-18],[-22,8],[26,20],[-8,-32],[5,14]].slice(0,Math.max(2,Math.min(5,mods.length)));
+  const ex=(46*Math.cos(-.6)).toFixed(2), ey=(46*Math.sin(-.6)).toFixed(2);
+  const radar=`<svg class="rr" viewBox="-50 -50 100 100" aria-hidden="true"><circle r="46"/><circle r="31"/><circle r="16"/><line x1="-48" y1="0" x2="48" y2="0"/><line x1="0" y1="-48" x2="0" y2="48"/>
+    <g class="sweep"><path d="M0 0 L46 0 A46 46 0 0 0 ${ex} ${ey}Z"/></g>
+    ${blips.map((b,i)=>`<circle class="bl ${i===0?'hot':''}" cx="${b[0]}" cy="${b[1]}" r="${i===0?2.4:1.6}"/><text x="${b[0]+3}" y="${b[1]-3}">${esc((mods[i]?.l||'').slice(0,8).toUpperCase())}</text>`).join('')}
+    <circle class="self" r="2"/></svg>`;
+  return `<div class="tc ${o.tall?'tall':''}"><div class="tc-col">${L.map(tile).join('')}</div><div class="tc-map">${radar}<div class="tc-cap">SITUATION · ${esc(o.stamp)}</div></div>
+    <div class="tc-col">${Rt.map(m=>`<div class="tc-row"><span>${esc(m.l)}</span><b>${esc(short(m))}</b></div>`).join('')}</div>
+    <div class="tc-alert"><span>▲ ALERT</span>${esc(ALERT[d])}</div></div>`;
+};
+const PT=['07:30','08:12','09:05','09:38','10:10'], FT=['11:00','14:00','16:30','18:00'];
+R.stream = (s,d,mods,o) => {
+  const n=mods.length, past=Math.max(1,Math.ceil(n*.6)), pts=PT.slice(Math.max(0,PT.length-past));
+  const now='<div class="st-now"><span>Now</span></div>';
+  let items='';
+  mods.forEach((m,i)=>{
+    if(i===past) items+=now;
+    const fut=i>=past;
+    items+=`<div class="st-i ${fut?'fut':''}"><time>${fut?(FT[i-past]||'later'):(pts[i]||'earlier')}</time><i></i>${tile(m)}</div>`;
+  });
+  if(past>=n) items+=now;
+  return `<div class="st ${d==='auto'?'h':''}"><div class="st-top"><b>Today</b><span class="st-q">Search your stream</span></div><div class="st-list">${items}</div></div>`;
+};
+R.orbit = (s,d,mods,o) => {
+  const ms=mods.slice(0,6), n=ms.length, rx=o.tall?30:(d==='auto'?40:36), ry=o.tall?35:36;
+  const sats=ms.map((m,i)=>{const a=-Math.PI/2+i*2*Math.PI/n, pc=Math.round(m.p*100);
+    return `<div class="ob-s" style="left:${(50+rx*Math.cos(a)).toFixed(1)}%;top:${(50+ry*Math.sin(a)).toFixed(1)}%"><div class="ob-ring" style="--p:${pc}"><span>${pc}</span></div><div class="ob-tx"><b>${esc(m.l)}</b><span>${esc(m.s)}</span></div></div>`;}).join('');
+  return `<div class="ob"><svg class="ob-e" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="50" cy="50" rx="${rx}" ry="${ry}"/><ellipse cx="50" cy="50" rx="${rx*.55}" ry="${ry*.55}"/></svg>
+    <div class="ob-core"><div class="ob-dot"></div><b>${esc(ORBIT[d])}</b><span>${n} agents · ${esc(o.stamp)}</span></div>${sats}<div class="ob-ask">Approve · Redirect · Ask</div></div>`;
+};
+
+function renderScreen(spec, dev){
+  const max={calm:4,balanced:6,dense:8}[spec.density]||6;
+  let keys=(spec.modules[dev]||[]).filter(k=>LIB[dev][k]);
+  if(keys.length<3) keys=[...new Set([...keys,...Object.keys(LIB[dev])])].slice(0,3);
+  const mods=keys.slice(0,max).map(k=>LIB[dev][k]);
+  const p=spec.palette;
+  const style=`--bg:${p.bg};--sf:${p.surface};--fg:${p.fg};--ac:${p.accent};--ac2:${p.accent2};--mu:${p.muted};--font:${FONTS[spec.font][1]};--rad:calc(${spec.radius} * var(--u))`;
+  return `<div class="screen dv-${dev} ${spec.motion?'anim':''}" style="${esc(style)}">${R[spec.archetype](spec,dev,mods,{tall:dev==='mobile',stamp:STAMP[dev]})}</div>`;
+}
+
+/* ---------- data helpers ---------- */
+const HEX=/^#[0-9a-f]{6}$/i;
+function normalize(s){
+  s=s||{}; const base=PRESETS[0], p=s.palette||{}, palette={}, modules={};
+  PAL_KEYS.forEach(([k])=>palette[k]=HEX.test(p[k])?p[k].toLowerCase():base.palette[k]);
+  for(const d of Object.keys(DEVICES)){
+    let m=[...new Set((s.modules?.[d]||[]).filter(k=>LIB[d][k]))];
+    for(const k of Object.keys(LIB[d])){ if(m.length>=3) break; if(!m.includes(k)) m.push(k); }
+    modules[d]=m;
+  }
+  return {
+    id:typeof s.id==='string'?s.id:null, custom:true,
+    name:String(s.name||'Untitled layout').trim().slice(0,40)||'Untitled layout',
+    tagline:String(s.tagline||'').slice(0,120),
+    archetype:ARCH[s.archetype]?s.archetype:'tiling',
+    font:FONTS[s.font]?s.font:'sans',
+    radius:clamp(Math.round(+s.radius)||0,0,6),
+    density:['calm','balanced','dense'].includes(s.density)?s.density:'balanced',
+    motion:!!s.motion,
+    inputs:(Array.isArray(s.inputs)?s.inputs:[]).filter(i=>INPUTS[i]),
+    sources:(Array.isArray(s.sources)?s.sources:[]).slice(0,6).map(x=>({t:String(x?.t||'Note').slice(0,20),n:String(x?.n||'').slice(0,160)})),
+    principles:(Array.isArray(s.principles)?s.principles:[]).map(String).map(x=>x.trim()).filter(Boolean).slice(0,6),
+    palette, modules
+  };
+}
+const KEY='future-os-lab.layouts';
+function load(){ try{ const r=JSON.parse(localStorage.getItem(KEY)||'[]'); return Array.isArray(r)?r.map(x=>{const n=normalize(x); n.id=n.id||newId(); return n;}):[]; }catch(e){ return []; } }
+function persist(){ try{ localStorage.setItem(KEY,JSON.stringify(custom)); }catch(e){ toast('Saved for this visit only. Your browser blocked storage.'); } }
+const newId=()=>'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+let custom=load();
+const state={sel:PRESETS[0].id, dev:'it', tab:'details', draft:null};
+const all=()=>[...PRESETS,...custom];
+const cur=()=>all().find(s=>s.id===state.sel)||PRESETS[0];
+
+/* ---------- UI ---------- */
+function renderList(){
+  const card=s=>`<button type="button" class="li ${s.id===state.sel?'on':''}" data-id="${esc(s.id)}"><span class="sw" aria-hidden="true">${['bg','surface','accent','accent2','muted'].map(k=>`<i style="background:${s.palette[k]}"></i>`).join('')}</span><span class="li-n">${esc(s.name)}</span><span class="li-a">${esc(ARCH[s.archetype].label)}</span></button>`;
+  $('#list').innerHTML=`<h2 class="eyebrow">Presets · ${PRESETS.length}</h2>${PRESETS.map(card).join('')}
+    <h2 class="eyebrow">Your layouts · ${custom.length}</h2>${custom.length?custom.map(card).join(''):'<p class="empty">Layouts you save from Build show up here.</p>'}
+    <p class="fine">Sources name the communities and works whose recurring ideas shaped each layout. No posts are quoted.</p>`;
+}
+function renderDevs(){
+  $('#devs').innerHTML=[['it','IT'],['auto','Auto'],['mobile','Mobile'],['all','All three']].map(([k,l])=>`<button type="button" role="tab" data-dev="${k}" aria-selected="${state.dev===k}">${l}</button>`).join('');
+}
+function renderStage(){
+  const building=state.tab==='build'&&state.draft, spec=building?state.draft:cur();
+  const devs=state.dev==='all'?['it','auto','mobile']:[state.dev];
+  const st=$('#stage');
+  st.className='stage v-'+state.dev;
+  st.innerHTML=devs.map(d=>`<figure class="dev dev-${d}">${renderScreen(spec,d)}<figcaption>${DEVICES[d]}</figcaption></figure>`).join('');
+  $('#stageMeta').textContent=(building?'Draft · ':'')+spec.name+' · '+ARCH[spec.archetype].label;
+}
+function renderDetails(confirmDel){
+  const s=cur();
+  const mods=Object.keys(DEVICES).map(d=>`<div><dt>${d==='it'?'IT':d==='auto'?'Auto':'Mobile'}</dt><dd>${s.modules[d].map(k=>esc(LIB[d][k].l)).join(', ')}</dd></div>`).join('');
+  $('#details').innerHTML=`
+    <div class="d-head"><p class="eyebrow">${esc(ARCH[s.archetype].label)}${s.custom?' · your layout':''}</p><h2>${esc(s.name)}</h2>${s.tagline?`<p class="d-tag">${esc(s.tagline)}</p>`:''}</div>
+    <section><h3>Drawn from</h3><ul class="src">${s.sources.length?s.sources.map(x=>`<li><span class="badge">${esc(x.t)}</span><span>${esc(x.n)}</span></li>`).join(''):'<li><span class="badge">Original</span><span>Your own design</span></li>'}</ul></section>
+    ${s.principles.length?`<section><h3>Design rules</h3><ul class="rules">${s.principles.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>`:''}
+    <section><h3>Input</h3><div class="chips">${s.inputs.length?s.inputs.map(i=>`<span class="chip">${INPUTS[i]}</span>`).join(''):'<span class="chip">Touch</span>'}</div></section>
+    <section><h3>Modules by device</h3><dl class="permods">${mods}</dl></section>
+    <section><h3>Palette</h3><div class="pal">${PAL_KEYS.map(([k,l])=>`<div><i style="background:${s.palette[k]}"></i>${l}<br>${s.palette[k]}</div>`).join('')}</div></section>
+    ${confirmDel?`<div class="confirm"><p>Delete “${esc(s.name)}”? This removes it from this browser.</p><div class="actions" style="border:0;padding:0"><button type="button" class="btn pri" data-act="del-yes">Delete</button><button type="button" class="btn" data-act="del-no">Keep it</button></div></div>`
+    :`<div class="actions"><button type="button" class="btn pri" data-act="remix">Remix in Build</button>${s.custom?'<button type="button" class="btn" data-act="edit">Edit</button><button type="button" class="btn danger" data-act="del">Delete</button>':''}</div>`}`;
+}
+function renderTabs(){
+  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===state.tab));
+  $('#details').hidden=state.tab!=='details';
+  $('#build').hidden=state.tab!=='build';
+}
+
+/* builder */
+function buildFormSkeleton(){
+  $('#f-arch').innerHTML=Object.entries(ARCH).map(([k,a])=>`<option value="${k}">${a.label}</option>`).join('');
+  $('#f-font').innerHTML=Object.entries(FONTS).map(([k,f])=>`<option value="${k}">${f[0]}</option>`).join('');
+  $('#f-colors').innerHTML=PAL_KEYS.map(([k,l])=>`<label class="col"><input type="color" id="c-${k}"><span>${l}</span></label>`).join('');
+  $('#f-density').innerHTML=['calm','balanced','dense'].map(v=>`<label><input type="radio" name="density" id="d-${v}" value="${v}">${v[0].toUpperCase()+v.slice(1)}</label>`).join('');
+  $('#f-inputs').innerHTML=Object.entries(INPUTS).map(([k,l])=>`<label><input type="checkbox" id="i-${k}" value="${k}">${l}</label>`).join('');
+  $('#f-mods').innerHTML=Object.keys(DEVICES).map(d=>`<div class="modgrp"><b>${DEVICES[d]}</b><div class="checks">${Object.entries(LIB[d]).map(([k,m])=>`<label><input type="checkbox" id="m-${d}-${k}" data-dev="${d}" value="${k}">${m.l}</label>`).join('')}</div><p class="order" id="ord-${d}"></p></div>`).join('');
+}
+function fillBase(){
+  $('#f-base').innerHTML=`<option value="">Current draft</option>`+all().map(s=>`<option value="${esc(s.id)}">${esc(s.name)}${s.custom?' (yours)':''}</option>`).join('');
+}
+function fillForm(d){
+  $('#f-name').value=d.name; $('#f-tag').value=d.tagline; $('#f-arch').value=d.archetype; $('#f-arch-hint').textContent=ARCH[d.archetype].hint;
+  PAL_KEYS.forEach(([k])=>$('#c-'+k).value=d.palette[k]);
+  $('#f-font').value=d.font; $('#f-rad').value=d.radius; $('#o-rad').textContent=d.radius;
+  $('#d-'+d.density).checked=true; $('#f-motion').checked=d.motion;
+  Object.keys(INPUTS).forEach(k=>$('#i-'+k).checked=d.inputs.includes(k));
+  Object.keys(DEVICES).forEach(dev=>Object.keys(LIB[dev]).forEach(k=>$(`#m-${dev}-${k}`).checked=d.modules[dev].includes(k)));
+  $('#f-rules').value=d.principles.join('\n');
+  renderOrder();
+}
+function renderOrder(){
+  Object.keys(DEVICES).forEach(dev=>{
+    const m=state.draft.modules[dev];
+    $('#ord-'+dev).textContent=(m.length<3?'Pick at least 3. ':'')+'Order: '+(m.map(k=>LIB[dev][k].l).join(' → ')||'none');
+  });
+}
+function readForm(){
+  const d=state.draft;
+  d.name=$('#f-name').value.trim()||'Untitled layout';
+  d.tagline=$('#f-tag').value.trim();
+  d.archetype=$('#f-arch').value; $('#f-arch-hint').textContent=ARCH[d.archetype].hint;
+  PAL_KEYS.forEach(([k])=>d.palette[k]=$('#c-'+k).value);
+  d.font=$('#f-font').value; d.radius=+$('#f-rad').value; $('#o-rad').textContent=d.radius;
+  d.density=(document.querySelector('input[name=density]:checked')||{}).value||'balanced';
+  d.motion=$('#f-motion').checked;
+  d.inputs=Object.keys(INPUTS).filter(k=>$('#i-'+k).checked);
+  d.principles=$('#f-rules').value.split('\n').map(x=>x.trim()).filter(Boolean).slice(0,6);
+}
+function startDraft(base, editing){
+  const d=clone(base);
+  if(editing){ d.custom=true; }
+  else{
+    d.id=null; d.custom=true;
+    if(!base.custom){ d.name=(base.name+' Remix').slice(0,40); d.sources=[{t:'Remix',n:'Based on '+base.name},...base.sources]; }
+    else{ d.name=(base.name+' copy').slice(0,40); }
+  }
+  state.draft=d; state.tab='build';
+  fillBase(); $('#f-base').value=''; fillForm(d); $('#io-msg').textContent='';
+  renderTabs(); renderStage();
+}
+
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function hsl(h,s,l){ s/=100; l/=100; const f=n=>{const k=(n+h/30)%12, c=l-s*Math.min(l,1-l)*Math.max(-1,Math.min(k-3,9-k,1)); return Math.round(c*255).toString(16).padStart(2,'0');}; return '#'+f(0)+f(8)+f(4); }
+function randomDraft(){
+  const h=Math.floor(Math.random()*360), h2=(h+pick([30,150,180,200]))%360, dark=Math.random()<.75;
+  const shuffle=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+  const modules={}; Object.keys(DEVICES).forEach(d=>modules[d]=shuffle(Object.keys(LIB[d])).slice(0,6));
+  return normalize({
+    name:pick(['Halo','Drift','Lattice','Vesper','Quorum','Ember','Tessera','Nimbus','Parallax','Kestrel','Meridian','Cinder'])+' '+pick(['Deck','Shell','Field','Glass','Loop','Array','Veil','Frame']),
+    tagline:'A randomized starting point. Tune it, then save.',
+    archetype:pick(Object.keys(ARCH)), font:pick(Object.keys(FONTS)), radius:Math.floor(Math.random()*7),
+    density:pick(['calm','balanced','dense']), motion:Math.random()<.6,
+    inputs:shuffle(Object.keys(INPUTS)).slice(0,2+Math.floor(Math.random()*2)),
+    sources:[{t:'Generated',n:'Randomized in Future OS Lab'}], principles:[],
+    palette:dark
+      ? {bg:hsl(h,35,7),surface:hsl(h,30,14),fg:hsl(h,25,92),accent:hsl(h2,90,62),accent2:hsl((h2+60)%360,85,65),muted:hsl(h,15,58)}
+      : {bg:hsl(h,25,94),surface:hsl(h,30,99),fg:hsl(h,30,12),accent:hsl(h2,75,44),accent2:hsl((h2+60)%360,70,45),muted:hsl(h,12,44)},
+    modules
+  });
+}
+
+let toastT;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,2600); }
+function renderAll(){ renderList(); renderDevs(); renderTabs(); renderDetails(); renderStage(); }
+
+/* events */
+$('#list').addEventListener('click',e=>{
+  const b=e.target.closest('.li'); if(!b) return;
+  state.sel=b.dataset.id;
+  if(state.tab==='build') state.tab='details';
+  renderAll();
+});
+$('#devs').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; state.dev=b.dataset.dev; renderDevs(); renderStage(); });
+$('#tabs').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.tab==='build'){ if(!state.draft) startDraft(cur(),false); else { state.tab='build'; fillBase(); renderTabs(); renderStage(); } }
+  else { state.tab='details'; renderTabs(); renderDetails(); renderStage(); }
+});
+$('#details').addEventListener('click',e=>{
+  const a=e.target.closest('[data-act]')?.dataset.act; if(!a) return;
+  const s=cur();
+  if(a==='remix') startDraft(s,false);
+  if(a==='edit') startDraft(s,true);
+  if(a==='del') renderDetails(true);
+  if(a==='del-no') renderDetails(false);
+  if(a==='del-yes'){
+    custom=custom.filter(x=>x.id!==s.id); persist();
+    if(state.draft?.id===s.id) state.draft=null;
+    state.sel=PRESETS[0].id; renderAll(); toast('Deleted “'+s.name+'”');
+  }
+});
+const form=$('#build');
+form.addEventListener('input',e=>{
+  if(e.target.id==='f-base'||e.target.id==='f-json') return;
+  if(e.target.dataset.dev){
+    const d=e.target.dataset.dev, k=e.target.value, arr=state.draft.modules[d];
+    state.draft.modules[d]=e.target.checked?[...arr.filter(x=>x!==k),k]:arr.filter(x=>x!==k);
+    renderOrder();
+  } else readForm();
+  renderStage();
+});
+$('#f-base').addEventListener('change',e=>{
+  const s=all().find(x=>x.id===e.target.value); if(!s) return;
+  startDraft(s,false);
+});
+form.addEventListener('submit',e=>{
+  e.preventDefault(); readForm();
+  const short=Object.keys(DEVICES).find(d=>state.draft.modules[d].length<3);
+  if(short){ toast(DEVICES[short]+' needs at least 3 modules.'); return; }
+  const n=normalize(state.draft);
+  const i=n.id?custom.findIndex(x=>x.id===n.id):-1;
+  if(i>=0) custom[i]=n; else { n.id=newId(); custom.push(n); }
+  persist();
+  state.sel=n.id; state.draft=null; state.tab='details';
+  renderAll(); toast('Saved “'+n.name+'”');
+});
+form.addEventListener('click',e=>{
+  const a=e.target.closest('[data-act]')?.dataset.act; if(!a) return;
+  const msg=$('#io-msg'); msg.className='msg';
+  if(a==='random'){ state.draft=randomDraft(); fillForm(state.draft); renderStage(); }
+  if(a==='export'){
+    readForm(); const out=normalize(state.draft); delete out.id; delete out.custom;
+    const txt=JSON.stringify(out,null,2), ta=$('#f-json'); ta.value=txt;
+    const done=()=>{ msg.textContent='Draft JSON copied. Paste it anywhere to share.'; };
+    const fail=()=>{ ta.focus(); ta.select(); msg.textContent='Copy blocked here. The JSON is selected; press Ctrl+C or Cmd+C.'; };
+    try{ navigator.clipboard.writeText(txt).then(done,fail); }catch(err){ fail(); }
+  }
+  if(a==='import'){
+    let data;
+    try{ data=JSON.parse($('#f-json').value); }
+    catch(err){ msg.className='msg err'; msg.textContent='That is not valid JSON. Check for a missing comma or bracket.'; return; }
+    const arr=(Array.isArray(data)?data:[data]).filter(x=>x&&typeof x==='object');
+    if(!arr.length){ msg.className='msg err'; msg.textContent='No layouts found. Paste one layout object or a list of them.'; return; }
+    const added=arr.slice(0,50).map(x=>{const n=normalize(x); n.id=newId(); return n;});
+    custom.push(...added); persist();
+    state.sel=added[added.length-1].id; state.draft=null; state.tab='details';
+    renderAll(); toast('Imported '+added.length+' layout'+(added.length>1?'s':''));
+  }
+});
+
+buildFormSkeleton();
+renderAll();
+</script>
+</body>
+</html>
