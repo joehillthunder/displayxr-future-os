@@ -5,7 +5,7 @@
 // - In the DisplayXR Browser on a Leia display: a woven inline-3D scene (display rig, the devices
 //   are the subject), drawn per eye from the views the runtime hands us. Glasses-free 3D with
 //   head tracking.
-// - Anywhere else: one perspective camera with a slow sway and drag-to-look, so the depth still
+// - Anywhere else: one perspective camera with a slow sway, so the depth still
 //   reads on a 2D monitor.
 // Rules followed: DisplayXR/displayxr-web docs/woven-canvas-rules.md.
 
@@ -244,7 +244,14 @@ function tile(parent, c, m, x, y, z, w, h, { style = 'solid', rx = 0, ry = 0, ac
     const t = thick ?? Math.min(w, h) * 0.06;
     box(grp, w * 0.97, h * 0.97, t, hex(mix(c.P.surface, '#000', 0.35)), 0, 0, -t / 2);
   }
-  return grp;
+  return pickable(c, grp, m.key, true);
+}
+
+// Mark an object as a module the viewer can point at. Clicks walk up from the hit mesh to the
+// nearest tagged ancestor, so tagging a group covers its children. lift: hover raises it a little.
+function pickable(c, obj, key, lift = false) {
+  if (key) obj.userData.pick = { dev: c.d, key, lift: lift ? Math.min(c.W, c.H) * 0.035 : 0 };
+  return obj;
 }
 
 // Backdrop on the device's back wall.
@@ -276,7 +283,7 @@ A.bands = (c) => {
   const cols = [P.accent, P.accent2, P.muted];
   mods.forEach((mo, i) => {
     const y = colTop - ph * (i + 0.5);
-    box(g, cw, ph - gap, fd, cols[i % 3], L + cw / 2, y, fz);
+    pickable(c, box(g, cw, ph - gap, fd, cols[i % 3], L + cw / 2, y, fz), mo.key);
     text(g, c, mo.l, { size: ph * 0.34, color: P.bg, x: L + cw - m * 0.4, y: y - ph * 0.12, z: fz + fd / 2 + 0.01, align: 'right', upper: true, weight: 600 });
   });
   const fillTop = colTop - ph * mods.length;
@@ -334,7 +341,7 @@ A.radial = (c) => {
     const z = on ? 0.1 * S : 0.02 * S;
     const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color: on ? P.accent : P.surface, emissive: on ? P.accent : 0x000000, emissiveIntensity: on ? 0.25 : 0 }));
     mesh.position.z = z;
-    wheel.add(mesh);
+    wheel.add(pickable(c, mesh, mo.key));
     const rm = (r1 + r2) / 2;
     if (on) glow(wheel, c, P.accent, S * 0.55, Math.cos(ca) * rm, Math.sin(ca) * rm, z - 0.01, 0.55);
     text(wheel, c, mo.l.slice(0, 10), { size: S * 0.036, color: on ? P.bg : P.fg, x: Math.cos(ca) * rm, y: Math.sin(ca) * rm, z: z + dep + 0.01, weight: 600 });
@@ -450,12 +457,12 @@ A.ambient = (c) => {
     const w = Math.min(row ? 0.22 * W : 0.3 * W, ch * 0.38 * label.length * 0.62 + ch);
     const x = row ? 0.36 * W : (i - 1) * (d === 'mobile' ? 0 : 0.32 * W);
     const y = row ? (1 - i) * ch * 1.4 : d === 'mobile' ? -0.22 * H - i * ch * 1.3 : -0.26 * H;
-    canvasPlane(g, w, ch, c.dens, (gx, pw, ph) => {
+    pickable(c, canvasPlane(g, w, ch, c.dens, (gx, pw, ph) => {
       gx.fillStyle = P.surface; rrect(gx, 0, 0, pw, ph, ph / 2); gx.fill();
       gx.textBaseline = 'middle'; gx.font = `500 ${ph * 0.36}px ${c.font}`;
       gx.fillStyle = P.muted; gx.textAlign = 'left'; gx.fillText(mo.l, ph * 0.4, ph / 2);
       gx.fillStyle = P.fg; gx.textAlign = 'right'; gx.fillText(ellipsize(gx, String(mo.k === 'term' ? 'ready' : mo.v), pw * 0.45), pw - ph * 0.4, ph / 2);
-    }, { x, y, z: 0.1 * S });
+    }, { x, y, z: 0.1 * S }), mo.key, true);
   });
 };
 
@@ -494,18 +501,18 @@ A.cyber = (c) => {
     const x = -W / 2 + (xp / 100) * W, z = fz0 + 0.12 * fd + zf * 0.8 * fd;
     const h = (hp / 100) * H * (0.5 + 0.5 * mo.p) * 1.35, w = (tall ? 0.08 : 0.035) * W;
     const color = i === hot ? P.accent : P.accent2;
-    box(g, w, h, w, color, x, fy + h / 2, z, { emissive: 0.55 });
+    pickable(c, box(g, w, h, w, color, x, fy + h / 2, z, { emissive: 0.55 }), mo.key);
     glow(g, c, color, w * 4, x, fy + h, z, 0.6);
     glow(g, c, color, w * 5, x, fy + 0.01, z, 0.25);
     const lw = Math.max(w * 3.2, Math.min(W, H) * 0.2), lh = lw * 0.42;
-    canvasPlane(g, lw, lh, c.dens, (gx, pw, ph) => {
+    pickable(c, canvasPlane(g, lw, lh, c.dens, (gx, pw, ph) => {
       gx.fillStyle = rgba(P.bg, 0.78); gx.fillRect(0, 0, pw, ph);
       gx.strokeStyle = color; gx.lineWidth = Math.max(2, ph * 0.03); gx.strokeRect(1, 1, pw - 2, ph - 2);
       gx.textAlign = 'center'; gx.textBaseline = 'middle';
       gx.font = `500 ${ph * 0.22}px ${c.font}`; gx.fillStyle = P.muted; gx.fillText(mo.l.toUpperCase(), pw / 2, ph * 0.3);
       const sz = fitText(gx, String(mo.k === 'term' ? 'live' : mo.v), pw * 0.9, ph * 0.36, 600, c.font);
       gx.fillStyle = P.fg; gx.fillText(String(mo.k === 'term' ? 'live' : mo.v), pw / 2, ph * 0.68 + sz * 0.02);
-    }, { x, y: fy + h + lh / 2 + Math.min(W, H) * 0.02, z });
+    }, { x, y: fy + h + lh / 2 + Math.min(W, H) * 0.02, z }), mo.key);
   });
   text(g, c, `${STAMP[d]}  ·  ${c.spec.name}`, { size: Math.min(W, H) * 0.03, color: P.accent2, x: -W / 2 + Math.min(W, H) * 0.04, y: H / 2 - Math.min(W, H) * 0.05, z: 0.02, align: 'left', upper: true });
 };
@@ -519,7 +526,8 @@ A.tactical = (c) => {
   const ay = B + ah / 2;
   box(g, R - L, ah, 0.01 * H, P.accent2, 0, ay, 0.05 * H, { emissive: 0.15, opacity: 0.35 });
   box(g, 0.008 * Math.max(W, H), ah, 0.012 * H, P.accent2, L, ay, 0.055 * H, { emissive: 0.6 });
-  text(g, c, `▲ ALERT   ${ALERT[d]}`, { size: ah * 0.42, color: P.fg, x: L + m, y: ay, z: 0.065 * H, align: 'left' });
+  const alert = `▲ ALERT   ${ALERT[d]}`; // sized to fit the strip: a monospace glyph is about 0.62 em wide
+  text(g, c, alert, { size: Math.min(ah * 0.42, (R - L - m * 2) / (alert.length * 0.62)), color: P.fg, x: L + m, y: ay, z: 0.065 * H, align: 'left' });
   const top = T, bot = B + ah + gap;
   let map, leftCol, rightCol;
   if (!tall) {
@@ -553,7 +561,7 @@ A.tactical = (c) => {
     const x = (bx / 46) * rr, y = (-by / 46) * rr, z = hz * rr * 0.55, hotb = i === 0;
     const color = hotb ? P.accent2 : P.accent;
     const s = new THREE.Mesh(new THREE.SphereGeometry(rr * (hotb ? 0.045 : 0.032), 16, 8), new THREE.MeshLambertMaterial({ color, emissive: color, emissiveIntensity: 0.7 }));
-    s.position.set(x, y, z); radar.add(s);
+    s.position.set(x, y, z); radar.add(pickable(c, s, mods[i]?.key));
     const bg2 = glow(radar, c, color, rr * (hotb ? 0.4 : 0.25), x, y, z - 0.005, 0.8);
     if (c.motion && hotb) c.anim.push((t) => { bg2.material.opacity = 0.45 + Math.abs(Math.sin(t * 2.4)) * 0.45; });
     box(radar, rr * 0.006, rr * 0.006, z, color, x, y, z / 2, { emissive: 0.5, opacity: 0.6 });
@@ -567,20 +575,19 @@ A.tactical = (c) => {
   const lh = (colTop - bot - gap * (Lm.length - 1)) / Math.max(1, Lm.length);
   Lm.forEach((mo, i) => tile(g, c, mo, (leftCol[0] + leftCol[1]) / 2, colTop - lh / 2 - i * (lh + gap), 0.03 * H, leftCol[1] - leftCol[0], lh, { style: 'outline', thick: 0.01 * H }));
   const rw = rightCol[1] - rightCol[0], rh = colTop - bot;
-  canvasPlane(g, rw, rh, c.dens, (gx, pw, ph) => {
-    const rowH = Math.min(ph / Math.max(3, Rm.length), pw * 0.32);
-    Rm.forEach((mo, i) => {
-      const y = rowH * (i + 1);
+  const rowU = Math.min(rh / Math.max(3, Rm.length), rw * 0.32);
+  Rm.forEach((mo, i) => {
+    pickable(c, canvasPlane(g, rw, rowU, c.dens, (gx, pw, ph) => {
       gx.strokeStyle = P.muted; gx.lineWidth = Math.max(1.5, pw * 0.006);
-      gx.beginPath(); gx.moveTo(0, y); gx.lineTo(pw, y); gx.stroke();
+      gx.beginPath(); gx.moveTo(0, ph - 1); gx.lineTo(pw, ph - 1); gx.stroke();
       gx.textBaseline = 'alphabetic';
-      gx.font = `500 ${rowH * 0.2}px ${c.font}`; gx.fillStyle = P.muted; gx.textAlign = 'left';
-      gx.fillText(mo.l.toUpperCase(), 0, y - rowH * 0.18);
+      gx.font = `500 ${ph * 0.2}px ${c.font}`; gx.fillStyle = P.muted; gx.textAlign = 'left';
+      gx.fillText(mo.l.toUpperCase(), 0, ph * 0.82);
       gx.textAlign = 'right'; gx.fillStyle = P.fg;
-      fitText(gx, String(mo.k === 'term' ? 'ok' : mo.v), pw * 0.5, rowH * 0.36, 500, c.font);
-      gx.fillText(String(mo.k === 'term' ? 'ok' : mo.v), pw, y - rowH * 0.16);
-    });
-  }, { x: (rightCol[0] + rightCol[1]) / 2, y: colTop - rh / 2, z: 0.02 * H });
+      fitText(gx, String(mo.k === 'term' ? 'ok' : mo.v), pw * 0.5, ph * 0.36, 500, c.font);
+      gx.fillText(String(mo.k === 'term' ? 'ok' : mo.v), pw, ph * 0.84);
+    }, { x: (rightCol[0] + rightCol[1]) / 2, y: colTop - rowU * (i + 0.5), z: 0.02 * H }), mo.key, true);
+  });
 };
 
 const PT = ['07:30', '08:12', '09:05', '09:38', '10:10'], FT = ['11:00', '14:00', '16:30', '18:00'];
@@ -677,6 +684,7 @@ A.orbit = (c) => {
       gx.fillText(ellipsize(gx, mo.s, pw - ph * 1.1), ph * 0.98, ph * 0.68);
     }, {});
     box(grp, sw * 0.96, sh * 0.9, sh * 0.12, hex(mix(P.surface, '#000', 0.35)), 0, 0, -sh * 0.07);
+    pickable(c, grp, mo.key);
     return { grp, a0: -Math.PI / 2 + (i * Math.PI * 2) / n };
   });
   const place = (s) => sats.forEach(({ grp, a0 }) => grp.position.copy(at(a0 + s)));
@@ -685,12 +693,84 @@ A.orbit = (c) => {
   text(g, c, 'Approve  ·  Redirect  ·  Ask', { size: S * 0.03, color: P.muted, y: -H / 2 + S * 0.05, z: 0.02 });
 };
 
+// ---------- the detail card: a module opened up, in front of the layout ----------
+// It sits just in front of the glass, not far out: it is all text, and text is sharpest at the
+// zero-disparity plane on a lenticular panel. A scrim dims the layout behind it.
+const ACTIONS = { term: ['Run', 'History', 'Split pane'], num: ['Open', 'Mark done', 'Pin'], bar: ['Open', 'Adjust', 'Pin'], spark: ['Open', 'Last 24 h', 'Alert me'], text: ['Open', 'Snooze', 'Pin'] };
+function detailCard(g, c, m) {
+  const { W, H, P, d } = c, S = Math.min(W, H);
+  const scrim = new THREE.Mesh(PLANE, new THREE.MeshBasicMaterial({ color: P.bg, transparent: true, opacity: 0.72, depthWrite: false }));
+  scrim.scale.set(W, H, 1); scrim.position.z = 0.03 * S;
+  scrim.userData.pick = { dev: d, key: '__close' };
+  g.add(scrim);
+  const w = d === 'mobile' ? 0.88 * W : d === 'auto' ? 0.5 * W : 0.62 * W, h = d === 'mobile' ? 0.42 * H : 0.72 * H;
+  const card = new THREE.Group();
+  card.position.z = 0.07 * S;
+  card.userData.pick = { dev: d, key: '__close' };
+  g.add(card);
+  const fam = c.font;
+  canvasPlane(card, w, h, c.dens, (gx, pw, ph) => {
+    const base = Math.min(ph, pw * 0.7), pad = base * 0.07, r = (c.radius + 1) * base * 0.02;
+    gx.fillStyle = P.surface; rrect(gx, 0, 0, pw, ph, r); gx.fill();
+    gx.strokeStyle = P.accent; gx.lineWidth = Math.max(3, base * 0.01); gx.stroke();
+    gx.textBaseline = 'top'; gx.textAlign = 'left';
+    gx.font = `500 ${base * 0.055}px ${fam}`; setSpacing(gx, `${base * 0.006}px`); gx.fillStyle = P.muted;
+    gx.fillText(m.l.toUpperCase(), pad, pad); setSpacing(gx, '0px');
+    gx.textAlign = 'right'; gx.font = `400 ${base * 0.045}px ${fam}`;
+    gx.fillText('Tap to close · Esc', pw - pad, pad);
+    gx.textAlign = 'left';
+    let y = pad + base * 0.1;
+    if (m.k === 'term') {
+      const lh = base * 0.07;
+      gx.font = `400 ${lh * 0.85}px 'IBM Plex Mono', monospace`; gx.fillStyle = P.accent;
+      m.v.split('\n').forEach((l, i) => gx.fillText(l, pad, y + lh * i));
+      y += lh * m.v.split('\n').length + base * 0.03;
+    } else {
+      const sz = fitText(gx, m.v, pw - pad * 2, base * 0.2, 600, fam);
+      gx.fillStyle = P.fg; gx.fillText(m.v, pad, y); y += sz * 1.15;
+    }
+    gx.font = `400 ${base * 0.05}px ${fam}`; gx.fillStyle = rgba(P.fg, 0.75);
+    gx.fillText(m.s, pad, y); y += base * 0.09;
+    const cw = pw - pad * 2, chh = ph - y - pad - base * 0.13;
+    if (m.k === 'spark' && m.sp && chh > base * 0.1) {
+      const mn = Math.min(...m.sp), mx = Math.max(...m.sp);
+      const pts = m.sp.map((v, i) => [pad + (i / (m.sp.length - 1)) * cw, y + chh - ((v - mn) / (mx - mn || 1)) * chh]);
+      gx.strokeStyle = rgba(P.fg, 0.1); gx.lineWidth = 1;
+      for (let k = 0; k <= 4; k++) { const yy = y + (chh * k) / 4; gx.beginPath(); gx.moveTo(pad, yy); gx.lineTo(pad + cw, yy); gx.stroke(); }
+      gx.beginPath(); gx.moveTo(pad, y + chh); pts.forEach(([x, yy]) => gx.lineTo(x, yy)); gx.lineTo(pad + cw, y + chh); gx.closePath();
+      gx.fillStyle = rgba(P.accent, 0.25); gx.fill();
+      gx.beginPath(); pts.forEach(([x, yy], i) => (i ? gx.lineTo(x, yy) : gx.moveTo(x, yy)));
+      gx.strokeStyle = P.accent; gx.lineWidth = Math.max(3, base * 0.01); gx.stroke();
+      const [ex, ey] = pts[pts.length - 1]; gx.fillStyle = P.accent; gx.beginPath(); gx.arc(ex, ey, base * 0.018, 0, Math.PI * 2); gx.fill();
+    } else if (chh > base * 0.06) {
+      const bh = Math.min(chh * 0.3, base * 0.06), by = y + chh / 2 - bh / 2;
+      gx.fillStyle = rgba(P.fg, 0.12); rrect(gx, pad, by, cw, bh, bh / 2); gx.fill();
+      gx.fillStyle = P.accent; rrect(gx, pad, by, cw * m.p, bh, bh / 2); gx.fill();
+      gx.fillStyle = P.muted; gx.font = `500 ${base * 0.045}px ${fam}`; gx.fillText(`${Math.round(m.p * 100)}%`, pad, by + bh + base * 0.02);
+    }
+    const acts = ACTIONS[m.k] || ACTIONS.text, ah = base * 0.085, ay = ph - pad - ah;
+    let ax = pad;
+    gx.font = `500 ${ah * 0.42}px ${fam}`; gx.textBaseline = 'middle';
+    acts.forEach((t, i) => {
+      const aw = gx.measureText(t).width + ah * 0.9;
+      gx.fillStyle = i === 0 ? P.accent : rgba(P.fg, 0.1); rrect(gx, ax, ay, aw, ah, ah / 2); gx.fill();
+      gx.fillStyle = i === 0 ? P.bg : P.fg; gx.fillText(t, ax + ah * 0.45, ay + ah / 2);
+      ax += aw + ah * 0.3;
+    });
+  }, { z: 0.004 });
+  box(card, w * 0.98, h * 0.98, S * 0.02, hex(mix(P.surface, '#000', 0.35)), 0, 0, -S * 0.01);
+  glow(card, c, P.accent, Math.max(w, h) * 1.3, 0, 0, -S * 0.02, 0.25);
+  card.scale.setScalar(0.86);
+  c.anim.push(() => { card.scale.setScalar(card.scale.x + (1 - card.scale.x) * 0.22); });
+}
+
 // ---------- a device: shadow box, hardware, then the layout inside it ----------
 
 function buildDevice(parent, spec, d, opts) {
   const { W, H, D } = DEV[d];
   const P = spec.palette;
   const g = new THREE.Group();
+  g.userData.pick = { dev: d, key: null }; // the device itself: a click on it picks the device
   parent.add(g);
   const bz = Math.min(W, H) * 0.045, lip = 0.25;
   const hw = HARDWARE;
@@ -720,6 +800,9 @@ function buildDevice(parent, spec, d, opts) {
   const max = { calm: 4, balanced: 6, dense: 8 }[spec.density] || 6;
   let keys = (spec.modules[d] || []).filter((k) => LIB[d][k]);
   if (keys.length < 3) keys = [...new Set([...keys, ...Object.keys(LIB[d])])].slice(0, 3);
+  // The module the viewer picked becomes the spotlight: every layout gives index 0 the hero spot.
+  const f = opts.focus?.[d];
+  if (f && keys.slice(0, max).includes(f)) keys = [f, ...keys.filter((k) => k !== f)];
   const cg = new THREE.Group(); // the layout itself; hardware stays in g
   g.add(cg);
   g.userData.content = cg;
@@ -763,28 +846,32 @@ function buildDevice(parent, spec, d, opts) {
 
   const c = {
     g: cg, W, H, D, d, spec, P, motion: opts.motion,
-    mods: keys.slice(0, max).map((k) => LIB[d][k]),
+    mods: keys.slice(0, max).map((k) => ({ ...LIB[d][k], key: k })),
     tall: d === 'mobile', font: FONTS[spec.font][1], radius: spec.radius,
     dens: 1400 / Math.max(H, W / 1.6), anim: opts.anim,
   };
   A[spec.archetype](c);
+  if (opts.detail && opts.detail.dev === d && LIB[d][opts.detail.key]) detailCard(g, c, { ...LIB[d][opts.detail.key], key: opts.detail.key });
   if (opts.caption) text(g, c, DEV[d].label.toUpperCase(), { size: Math.min(W, H) * 0.05, color: opts.captionColor, x: d === 'it' ? W * 0.32 : d === 'auto' ? W * 0.2 : 0, y: -H / 2 - bz - (d === 'it' ? H * 0.27 : d === 'auto' ? H * 0.3 : H * 0.06), z: 0.5, family: "'IBM Plex Mono', monospace", spacing: '2px' });
   return g;
 }
 
 // ---------- the stage ----------
 
-export function createStage({ canvas, cover, host, params = new URLSearchParams(location.search), onMode = () => {} }) {
+export function createStage({ canvas, cover, host, params = new URLSearchParams(location.search), onMode = () => {}, onPick = () => {}, onImmersive = () => {} }) {
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const tryWoven = !params.has('mono') && inline3DAvailable();
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: tryWoven });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 
-  // stage → depthRoot (squashes depth into the budget) → root (devices, fitted to the display)
+  // stage → spin (the viewer's rotation and zoom, about the glass centre) → depthRoot (squashes depth
+  // into the budget) → root (devices, fitted to the display). Squash first, then rotate: no shear.
   const stage = new THREE.Scene();
+  const spin = new THREE.Group();
   const depthRoot = new THREE.Group();
   const root = new THREE.Group();
-  stage.add(depthRoot);
+  stage.add(spin);
+  spin.add(depthRoot);
   depthRoot.add(root);
   stage.add(new THREE.HemisphereLight(0xffffff, 0x445066, 2.2));
   const sun = new THREE.DirectionalLight(0xffffff, 1.6);
@@ -811,11 +898,13 @@ export function createStage({ canvas, cover, host, params = new URLSearchParams(
     root.children.slice().forEach((ch) => { root.remove(ch); dispose(ch); });
     anim = [];
     intro = [];
+    hover = null;
+    lifting.clear();
     const { spec, dev } = current;
     const devs = dev === 'all' ? ['it', 'auto', 'mobile'] : [dev];
     const motion = spec.motion && !reduceMotion;
     for (const d of devs) {
-      const g = buildDevice(root, spec, d, { motion, anim, caption: dev === 'all', captionColor });
+      const g = buildDevice(root, spec, d, { motion, anim, caption: dev === 'all', captionColor, focus: current.focus, detail: current.detail });
       if (dev === 'all') g.position.set(ALL_POS[d][0], ALL_POS[d][1], 0);
       if (withIntro && !reduceMotion) {
         // Panels fly out of the depths to their places, staggered: one orchestrated moment per layout.
@@ -849,6 +938,8 @@ export function createStage({ canvas, cover, host, params = new URLSearchParams(
     lastS = s;
     anim.forEach((f) => f(s, dt));
     runIntro(s);
+    updateView(dt);
+    updateLift();
   }
 
   function aspect() { return canvas.clientWidth / Math.max(1, canvas.clientHeight); }
@@ -856,8 +947,11 @@ export function createStage({ canvas, cover, host, params = new URLSearchParams(
     root.position.set(0, 0, 0);
     root.scale.setScalar(1);
     depthRoot.scale.set(1, 1, 1);
+    const sr = spin.rotation.clone(), ss = spin.scale.x;
+    spin.rotation.set(0, 0, 0); spin.scale.setScalar(1);
     stage.updateMatrixWorld(true); // the whole chain: a stale parent matrix would skew the measurement
     const b = new THREE.Box3().setFromObject(root);
+    spin.rotation.copy(sr); spin.scale.setScalar(ss);
     if (b.isEmpty()) return; // nothing built yet
     const w = b.max.x - b.min.x, h = b.max.y - b.min.y;
     const s = Math.min((VDH * aspect() * 0.94) / w, (VDH * 0.9) / h);
@@ -869,19 +963,138 @@ export function createStage({ canvas, cover, host, params = new URLSearchParams(
   }
   function applyDepth() { depthRoot.scale.z = Math.min(1.4, (depth * VDH) / Math.max(1e-6, subjectDepth)); }
 
-  // ----- flat view: one camera, a slow sway, drag to look around -----
+  // ----- flat view: one camera and a slow sway (drag rotates the devices, above) -----
   const cam = new THREE.PerspectiveCamera(30, 1, 0.01, 20);
-  let drag = null, look = { x: 0, y: 0 }, lookTarget = { x: 0, y: 0 }, running = false, onScreen = true;
-  canvas.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY, lx: lookTarget.x, ly: lookTarget.y }; canvas.setPointerCapture(e.pointerId); });
-  canvas.addEventListener('pointermove', (e) => {
-    if (!drag) return;
-    lookTarget.x = Math.max(-1, Math.min(1, drag.lx + (e.clientX - drag.x) / (canvas.clientWidth * 0.4)));
-    lookTarget.y = Math.max(-1, Math.min(1, drag.ly - (e.clientY - drag.y) / (canvas.clientHeight * 0.5)));
+  let running = false, onScreen = true, immersive = false;
+
+  // ----- interaction: drag to rotate (with momentum), wheel or pinch to zoom, click to pick, hover to lift -----
+  const YAW = 1.1, PITCH = 0.6;
+  const view = { yaw: 0, pitch: 0, zoom: 1, ty: 0, tp: 0, tz: 1, vy: 0, vp: 0 };
+  const clampZ = (z) => Math.min(2.4, Math.max(0.6, z));
+  const pointers = new Map();
+  let drag = null, pinch = null, lastMoveT = 0, hover = null;
+  const lifting = new Set();
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  const pickCam = new THREE.PerspectiveCamera();
+  let havePickCam = false;
+
+  function pickAt(x, y) {
+    const r = canvas.getBoundingClientRect();
+    ndc.set(((x - r.left) / r.width) * 2 - 1, -((y - r.top) / r.height) * 2 + 1);
+    const camera = woven ? (havePickCam ? pickCam : null) : cam;
+    if (!camera) return null;
+    ray.setFromCamera(ndc, camera);
+    // The nearest module along the ray wins, even behind a transparent label or a panel still
+    // flying in from behind the back wall; otherwise the device itself.
+    let device = null;
+    for (const h of ray.intersectObject(root, true)) {
+      if (h.object.isPoints || h.object.isSprite) continue; // motes and glows are not things
+      let o = h.object;
+      while (o && !o.userData.pick) o = o.parent;
+      if (!o) continue;
+      if (o.userData.pick.key) return { obj: o, ...o.userData.pick };
+      device ??= { obj: o, ...o.userData.pick };
+    }
+    return device;
+  }
+  function setHover(obj) {
+    if (obj === hover) return;
+    if (intro.length) return; // let the fly-in finish first
+    hover = obj;
+    if (obj) { if (obj.userData.baseZ === undefined) obj.userData.baseZ = obj.position.z; lifting.add(obj); }
+  }
+  function updateLift() {
+    for (const o of lifting) {
+      const target = o === hover ? o.userData.pick.lift : 0;
+      const cur = (o.userData.liftCur || 0) + (target - (o.userData.liftCur || 0)) * 0.25;
+      o.userData.liftCur = cur;
+      o.position.z = o.userData.baseZ + cur;
+      if (!target && Math.abs(cur) < 1e-4) { o.position.z = o.userData.baseZ; o.userData.liftCur = 0; lifting.delete(o); }
+    }
+  }
+  function updateView(dt) {
+    if (!drag && (Math.abs(view.vy) > 1e-4 || Math.abs(view.vp) > 1e-4)) {
+      view.ty = Math.max(-YAW, Math.min(YAW, view.ty + view.vy));
+      view.tp = Math.max(-PITCH, Math.min(PITCH, view.tp + view.vp));
+      view.vy *= 0.92; view.vp *= 0.92;
+    }
+    const k = 1 - Math.pow(0.0005, dt);
+    view.yaw += (view.ty - view.yaw) * k;
+    view.pitch += (view.tp - view.pitch) * k;
+    view.zoom += (view.tz - view.zoom) * k;
+    spin.rotation.set(view.pitch, view.yaw, 0, 'YXZ');
+    spin.scale.setScalar(view.zoom);
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    try { canvas.setPointerCapture(e.pointerId); } catch { /* synthetic events */ }
+    if (pointers.size === 1) { drag = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, moved: 0 }; view.vy = view.vp = 0; }
+    else if (pointers.size === 2) {
+      const [p, q] = [...pointers.values()];
+      pinch = { d: Math.hypot(p.x - q.x, p.y - q.y), z: view.tz };
+      drag = null;
+    }
   });
-  const endDrag = () => { drag = null; };
-  canvas.addEventListener('pointerup', endDrag);
-  canvas.addEventListener('pointercancel', endDrag);
-  canvas.addEventListener('dblclick', () => { lookTarget = { x: 0, y: 0 }; });
+  canvas.addEventListener('pointermove', (e) => {
+    if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch && pointers.size === 2) {
+      const [p, q] = [...pointers.values()];
+      view.tz = clampZ((pinch.z * Math.hypot(p.x - q.x, p.y - q.y)) / Math.max(1, pinch.d));
+      return;
+    }
+    if (drag) {
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      drag.x = e.clientX; drag.y = e.clientY;
+      drag.moved += Math.abs(dx) + Math.abs(dy);
+      if (drag.moved < 6) return;
+      const k = (Math.PI * 1.6) / Math.max(300, canvas.clientWidth);
+      view.ty = Math.max(-YAW, Math.min(YAW, view.ty + dx * k));
+      view.tp = Math.max(-PITCH, Math.min(PITCH, view.tp + dy * k));
+      view.vy = dx * k; view.vp = dy * k;
+      lastMoveT = performance.now();
+      canvas.style.cursor = 'grabbing';
+      return;
+    }
+    if (e.pointerType === 'mouse') {
+      const h = pickAt(e.clientX, e.clientY);
+      const mod = h && h.key && h.key !== '__close';
+      setHover(mod && h.lift ? h.obj : null);
+      canvas.style.cursor = h ? 'pointer' : 'grab';
+    }
+  });
+  function endPointer(e, cancelled) {
+    pointers.delete(e.pointerId);
+    if (pinch && pointers.size < 2) pinch = null;
+    if (drag && pointers.size === 0) {
+      if (!cancelled && drag.moved < 6) {
+        const h = pickAt(drag.sx, drag.sy);
+        onPick(h ? { dev: h.dev, key: h.key } : { dev: null, key: null });
+      } else if (performance.now() - lastMoveT > 90) { view.vy = view.vp = 0; } // released while still: no fling
+      drag = null;
+      canvas.style.cursor = '';
+    }
+  }
+  canvas.addEventListener('pointerup', (e) => endPointer(e, false));
+  canvas.addEventListener('pointercancel', (e) => endPointer(e, true));
+  canvas.addEventListener('pointerleave', () => { if (!drag) setHover(null); });
+  canvas.addEventListener('wheel', (e) => {
+    if (!immersive && !e.ctrlKey) return; // inline, the wheel scrolls the page
+    e.preventDefault();
+    view.tz = clampZ(view.tz * Math.exp(-e.deltaY * 0.0015));
+  }, { passive: false });
+
+  // ----- immersive: the stage takes the whole screen (real fullscreen where the browser allows it) -----
+  function setImmersive(on) {
+    if (on === immersive) return;
+    immersive = on;
+    host?.classList.toggle('immersive', on);
+    document.documentElement.classList.toggle('dxr-immersive', on);
+    if (on) host?.requestFullscreen?.().catch(() => {}); // CSS fills the window if this is refused
+    else if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    onImmersive(on);
+  }
+  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && immersive) setImmersive(false); });
 
   function resizeFlat() {
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -894,11 +1107,9 @@ export function createStage({ canvas, cover, host, params = new URLSearchParams(
     if (woven || !onScreen) { running = false; return; }
     const s = secs();
     tick();
-    look.x += (lookTarget.x - look.x) * 0.12;
-    look.y += (lookTarget.y - look.y) * 0.12;
-    const sway = reduceMotion || drag ? 0 : 1;
-    const ox = (look.x * 0.16 + Math.sin(s * 0.35) * 0.05 * sway) * camDist;
-    const oy = (look.y * 0.1 + Math.sin(s * 0.27) * 0.02 * sway) * camDist;
+    const sway = reduceMotion || drag || immersive ? 0 : 1;
+    const ox = Math.sin(s * 0.35) * 0.05 * sway * camDist;
+    const oy = Math.sin(s * 0.27) * 0.02 * sway * camDist;
     cam.position.set(ox, oy, Math.sqrt(Math.max(0.01, camDist * camDist - ox * ox - oy * oy)));
     cam.lookAt(0, 0, 0);
     renderer.render(stage, cam);
@@ -943,6 +1154,7 @@ export function createStage({ canvas, cover, host, params = new URLSearchParams(
     }
     renderer.setScissorTest(false);
   }
+  const ma = new THREE.Matrix4(), mb = new THREE.Matrix4(), pa = new THREE.Vector3(), pb = new THREE.Vector3();
   function onFrame(views, layer, xrFrame) {
     tick();
     // Validate before clearing: a short view list or a null viewport is the per-frame fallback.
@@ -957,6 +1169,14 @@ export function createStage({ canvas, cover, host, params = new URLSearchParams(
     }
     ease.apply(good, frameTrackingState(xrFrame));
     haveGood = true;
+    ma.fromArray(good[0].pose); mb.fromArray(good[1].pose);
+    pa.setFromMatrixPosition(ma).add(pb.setFromMatrixPosition(mb)).multiplyScalar(0.5);
+    ma.setPosition(pa);
+    pickCam.matrixWorld.copy(ma);
+    pickCam.matrixWorldInverse.copy(ma).invert();
+    pickCam.projectionMatrix.fromArray(good[0].proj);
+    pickCam.projectionMatrixInverse.copy(pickCam.projectionMatrix).invert();
+    havePickCam = true;
     // Keep the fog starting at the glass for wherever the tracked viewer actually is.
     if (stage.fog) { stage.fog.near = Math.max(0.05, good[0].pose[14]) * 0.995; stage.fog.far = stage.fog.near + fogRange; }
     drawGood();
@@ -1011,7 +1231,13 @@ export function createStage({ canvas, cover, host, params = new URLSearchParams(
   if (tryWoven) startWoven();
 
   return {
-    show(spec, dev, { intro: withIntro = false } = {}) { current = { spec, dev }; build(withIntro); },
+    show(spec, dev, { intro: withIntro = false, focus = {}, detail = null } = {}) { current = { spec, dev, focus, detail }; build(withIntro); },
+    enterImmersive() { setImmersive(true); },
+    exitImmersive() { setImmersive(false); },
+    get immersive() { return immersive; },
+    resetView() { view.ty = view.tp = 0; view.tz = 1; view.vy = view.vp = 0; },
+    nudge(dy, dp) { view.ty = Math.max(-YAW, Math.min(YAW, view.ty + dy)); view.tp = Math.max(-PITCH, Math.min(PITCH, view.tp + dp)); },
+    zoomBy(f) { view.tz = clampZ(view.tz * f); },
     rebuild() { build(); },
     setDepth(v) { depth = v; applyDepth(); fogRange = Math.max(0.12, subjectDepth * depthRoot.scale.z * 2.6); if (stage.fog) stage.fog.far = stage.fog.near + fogRange; },
     get depth() { return depth; },

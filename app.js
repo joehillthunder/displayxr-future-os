@@ -11,11 +11,19 @@ const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
 const stage = createStage({
   canvas: $('#os3d'),
   cover: $('#cover'),
+  host: $('#stage'),
   onMode: (mode) => {
     document.body.classList.toggle('woven', mode === 'woven');
     $('#mode').textContent = mode === 'woven'
-      ? 'Glasses-free 3D · DisplayXR on this display. Move your head to look around.'
-      : '3D preview · drag to look around, double-click to recenter. Open in the DisplayXR Browser on a Leia display for glasses-free 3D.';
+      ? 'Glasses-free 3D · DisplayXR on this display. Click a device to go full screen, drag to rotate, click a module to open it.'
+      : 'Click a device to go full screen · drag to rotate · click a module to open it. On a Leia display, open this in the DisplayXR Browser for glasses-free 3D.';
+  },
+  onPick: (hit) => handlePick(hit),
+  onImmersive: (on) => {
+    $('#hud').hidden = !on;
+    $('#hudHint').hidden = !on;
+    if (!on) { stage.resetView(); if (state.detail) { state.detail = null; renderStage(); } }
+    renderHud();
   },
 });
 
@@ -63,7 +71,7 @@ const newId=()=>'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6
 const clone=o=>JSON.parse(JSON.stringify(o));
 
 let custom=load();
-const state={sel:PRESETS[0].id, dev:'it', tab:'details', draft:null};
+const state={sel:PRESETS[0].id, dev:'it', tab:'details', draft:null, focus:{}, detail:null};
 function syncHash(){ try { history.replaceState(null, '', '#' + state.sel + (state.dev === 'it' ? '' : '.' + state.dev)); } catch {} }
 const all=()=>[...PRESETS,...custom];
 const cur=()=>all().find(s=>s.id===state.sel)||PRESETS[0];
@@ -93,8 +101,9 @@ function renderStage(){
   const intro=key!==lastKey; lastKey=key;
   syncHash();
   cancelAnimationFrame(pending);
-  pending=requestAnimationFrame(()=>stage.show(spec,state.dev,{intro}));
+  pending=requestAnimationFrame(()=>stage.show(spec,state.dev,{intro,focus:state.focus,detail:state.detail}));
   $('#stageMeta').textContent=(building?'Draft · ':'')+spec.name+' · '+ARCH[spec.archetype].label;
+  renderHud();
 }
 function renderDetails(confirmDel){
   const s=cur();
@@ -196,10 +205,62 @@ function renderAll(){ renderList(); renderDevs(); renderTabs(); renderDetails();
 $('#list').addEventListener('click',e=>{
   const b=e.target.closest('.li'); if(!b) return;
   state.sel=b.dataset.id;
+  state.focus={}; state.detail=null;
   if(state.tab==='build') state.tab='details';
   renderAll();
 });
-$('#devs').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; state.dev=b.dataset.dev; renderDevs(); renderStage(); });
+function setDev(dev){ state.dev=dev; state.detail=null; renderDevs(); renderStage(); }
+$('#devs').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setDev(b.dataset.dev); });
+
+/* interaction: full screen, picking modules, keyboard */
+const curSpec=()=>(state.tab==='build'&&state.draft)?state.draft:cur();
+// The modules a device actually shows, in the layout's own order (density caps the count).
+function visibleKeys(dev){
+  const spec=curSpec(), max={calm:4,balanced:6,dense:8}[spec.density]||6;
+  return (spec.modules[dev]||[]).filter(k=>LIB[dev][k]).slice(0,max);
+}
+function openModule(dev,key){ state.focus[dev]=key; state.detail={dev,key}; renderStage(); }
+function handlePick({dev,key}){
+  if(!stage.immersive) stage.enterImmersive();
+  // In the three-device view, a click picks the device and opens it on its own.
+  if(state.dev==='all'&&dev){ setDev(dev); return; }
+  if(!key||key==='__close'){ if(state.detail){ state.detail=null; renderStage(); } return; }
+  if(state.detail&&state.detail.key===key){ state.detail=null; renderStage(); return; }
+  openModule(dev,key);
+}
+function stepModule(dir){
+  if(state.dev==='all') return;
+  const keys=visibleKeys(state.dev); if(!keys.length) return;
+  const at=keys.indexOf(state.detail?.key ?? state.focus[state.dev]);
+  openModule(state.dev, keys[(at+dir+keys.length)%keys.length]);
+}
+function renderHud(){
+  const spec=curSpec();
+  $('#hudName').textContent=spec.name+' · '+ARCH[spec.archetype].label;
+  $('#hudDevs').innerHTML=[['it','IT'],['auto','Auto'],['mobile','Mobile'],['all','All']].map(([k,l])=>`<button type="button" data-dev="${k}" aria-selected="${state.dev===k}">${l}</button>`).join('');
+}
+$('#fsBtn').addEventListener('click',()=>stage.enterImmersive());
+$('#hud').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.dev) setDev(b.dataset.dev);
+  if(b.dataset.hud==='reset') stage.resetView();
+  if(b.dataset.hud==='exit') stage.exitImmersive();
+});
+$('#os3d').addEventListener('keydown',e=>{ if((e.key==='Enter'||e.key===' ')&&!stage.immersive){ e.preventDefault(); stage.enterImmersive(); } });
+document.addEventListener('keydown',e=>{
+  if(!stage.immersive||e.target.closest('input,textarea,select')) return;
+  const k=e.key;
+  if(k==='Escape'){ if(state.detail){ state.detail=null; renderStage(); } else stage.exitImmersive(); }
+  else if(k==='ArrowRight'&&!e.shiftKey) stepModule(1);
+  else if(k==='ArrowLeft'&&!e.shiftKey) stepModule(-1);
+  else if(k.startsWith('Arrow')&&e.shiftKey) stage.nudge(k==='ArrowLeft'?-0.15:k==='ArrowRight'?0.15:0, k==='ArrowUp'?-0.1:k==='ArrowDown'?0.1:0);
+  else if(k==='r'||k==='R') stage.resetView();
+  else if(k==='+'||k==='=') stage.zoomBy(1.15);
+  else if(k==='-'||k==='_') stage.zoomBy(1/1.15);
+  else if(['1','2','3','4'].includes(k)) setDev(['it','auto','mobile','all'][+k-1]);
+  else return;
+  e.preventDefault();
+});
 $('#tabs').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
   if(b.dataset.tab==='build'){ if(!state.draft) startDraft(cur(),false); else { state.tab='build'; fillBase(); renderTabs(); renderStage(); } }

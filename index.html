@@ -66,9 +66,26 @@ h1{font-family:var(--f-display);font-weight:600;font-size:22px;letter-spacing:-.
 .stage{position:relative;background:var(--stage);border-radius:14px}
 /* The woven canvas: no border, radius, shadow, opacity or filter on it or its ancestors (DisplayXR rule 7).
    will-change from its first paint (rule 4). */
-#os3d{display:block;width:100%;aspect-ratio:16/10;will-change:transform;touch-action:none;cursor:grab}
-#os3d:active{cursor:grabbing}
+#os3d{display:block;width:100%;aspect-ratio:16/10;will-change:transform;touch-action:pan-y;cursor:grab}
 .cover{position:absolute;left:0;top:0;width:100%;aspect-ratio:16/10;background:var(--stage);display:grid;place-items:center;color:var(--mute);font-family:var(--f-mono);font-size:12px}
+.stage-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+/* Immersive: the stage fills the window (and the screen, where fullscreen is allowed). */
+.stage.immersive{position:fixed;inset:0;z-index:40;border-radius:0}
+.stage.immersive #os3d,.stage.immersive .cover{width:100%;height:100%;aspect-ratio:auto}
+.stage.immersive #os3d{touch-action:none}
+html.dxr-immersive,html.dxr-immersive body{overflow:hidden}
+/* A sticky wrapper is its own stacking context and would trap the fixed stage under the side panel. */
+html.dxr-immersive .stage-wrap{position:static}
+/* HUD over the 3D: small partial regions with a plain tint. Never backdrop-filter over a weave
+   (DisplayXR rules 8 and 10). It sits on the 3D in either theme, so its colours are fixed. */
+.hud,.hud-hint{position:absolute;z-index:2;background:rgba(10,12,16,.66);color:#eef0f4;border-radius:10px}
+.hud{top:calc(12px + env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 10px;max-width:calc(100% - 24px)}
+.hud b{font-family:var(--f-display);font-weight:600;font-size:14px;padding:0 6px}
+.hud .seg{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.16)}
+.hud .seg button{color:#c3c8d2;padding:5px 11px}
+.hud .seg button[aria-selected="true"]{background:#eef0f4;color:#111317}
+.hud .btn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:#eef0f4;padding:6px 12px}
+.hud-hint{left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));margin:0;padding:7px 14px;font-size:12px;white-space:nowrap;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
 .stage-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px}
 .mode{margin:0;font-size:12px;color:var(--mute);max-width:70ch}
 .woven .mode{color:var(--accent)}
@@ -160,10 +177,23 @@ h1{font-family:var(--f-display);font-weight:600;font-size:22px;letter-spacing:-.
 
   <section class="stage-wrap" aria-label="Preview">
     <div class="stage-bar">
-      <div class="seg" role="tablist" id="devs" aria-label="Device"></div>
+      <div class="stage-tools">
+        <div class="seg" role="tablist" id="devs" aria-label="Device"></div>
+        <button type="button" class="btn" id="fsBtn">Full screen</button>
+      </div>
       <div class="stage-meta" id="stageMeta"></div>
     </div>
-    <div class="stage" id="stage"><canvas id="os3d" aria-label="3D preview of the selected layout"></canvas><div class="cover" id="cover" hidden>Starting glasses-free 3D…</div></div>
+    <div class="stage" id="stage">
+      <canvas id="os3d" tabindex="0" aria-label="3D preview of the selected layout. Press Enter for full screen."></canvas>
+      <div class="cover" id="cover" hidden>Starting glasses-free 3D…</div>
+      <div class="hud" id="hud" data-inline3d-overlay hidden>
+        <b id="hudName"></b>
+        <div class="seg" id="hudDevs" aria-label="Device"></div>
+        <button type="button" class="btn" data-hud="reset">Reset view</button>
+        <button type="button" class="btn" data-hud="exit">Exit full screen</button>
+      </div>
+      <p class="hud-hint" id="hudHint" data-inline3d-overlay hidden>Drag to rotate · scroll or pinch to zoom · click a module to open it · ← → next module · Shift+arrows turn · R reset · Esc exit</p>
+    </div>
     <div class="stage-foot">
       <p class="mode" id="mode">Loading the 3D preview…</p>
       <label class="depth" for="depth">Depth <input type="range" id="depth" min="0.1" max="0.9" step="0.01"></label>

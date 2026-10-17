@@ -7,6 +7,13 @@ Deep links: `#rocinante`, `#sprawl.all`, `#mind.mobile` (layout id, then `it` / 
 
 Part of [DisplayXR HQ](https://joehillthunder.github.io/) (Spatial UI/UX wing).
 
+## Controls
+
+- **Click a device** (or press **Full screen**) to open it full screen. In "All three", a click opens that device on its own.
+- **Drag** to rotate the device in 3D, with momentum. **Scroll** (full screen) or **pinch** to zoom.
+- **Click a module** to make it the layout's spotlight and open its detail card. Click the card, or press **Esc**, to close it.
+- Keys in full screen: **← →** next module, **Shift + arrows** turn, **+ −** zoom, **R** reset view, **1–4** IT / Auto / Mobile / All, **Esc** close card or exit.
+
 ## 3D on Leia displays
 
 - In the **DisplayXR Browser on a Leia display**, the preview is a woven inline-3D scene (`@displayxr/inline3d` 1.45.1, vendored in `vendor/inline3d/`, Apache-2.0): glasses-free 3D with head tracking. Display rig, `virtualDisplayHeight` 0.3 m.
